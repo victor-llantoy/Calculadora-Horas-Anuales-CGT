@@ -60,6 +60,23 @@ footer{background:#111;color:#f4f4f4;font-size:13px;padding:22px 0}footer p{marg
 <div class="alert"><strong>Importante:</strong> la diferencia NO es una deuda de horas. Las rotas muestran horas planificadas, no necesariamente fichadas ni todas las horas computables. Hay que revisar vacaciones, permisos, bajas, semanas sin rota, festivos, cambios de contrato y el calendario laboral aplicable. La regla de tres es orientativa.</div>
 <div class="actions"><button id="copy" type="button" class="btn">Copiar mi cálculo</button><button id="print" type="button" class="btn subtle">Imprimir resultado</button></div>
 </section>
+<section class="panel" aria-labelledby="title3">
+<h2 id="title3">3. Horas complementarias y jornada irregular</h2>
+<p class="note">Introduce únicamente las horas realizadas durante el mismo período de fechas que has elegido arriba. Estos conceptos se contabilizan por separado.</p>
+<div class="grid">
+<div class="field"><label for="hasComplementary">¿Has realizado horas complementarias?</label><select id="hasComplementary"><option value="no">No</option><option value="yes">Sí</option></select></div>
+<div class="field" id="complementaryField" hidden><label for="complementary">¿Cuántas horas complementarias?</label><input id="complementary" type="number" min="0" max="3000" step="0.01" inputmode="decimal" value="0"></div>
+<div class="field"><label for="hasIrregular">¿Te han aplicado jornada irregular?</label><select id="hasIrregular"><option value="no">No</option><option value="yes">Sí</option></select></div>
+<div class="field" id="irregularField" hidden><label for="irregularDone">¿Cuántas horas de jornada irregular?</label><input id="irregularDone" type="number" min="0" max="3000" step="0.01" inputmode="decimal" value="0"></div>
+</div>
+<div class="results" id="extraResults" aria-live="polite">
+<div class="metric"><span>Horas complementarias indicadas</span><strong id="complementaryShown">0 h</strong></div>
+<div class="metric"><span>Horas irregulares indicadas</span><strong id="irregularShown">0 h</strong></div>
+<div class="metric"><span>Referencia irregular proporcional según cartel</span><strong id="irregularProportional">—</strong></div>
+<div class="metric"><span>Referencia irregular menos horas indicadas</span><strong id="irregularRemaining">—</strong></div>
+</div>
+<div class="alert ok">Las horas complementarias son distintas de la distribución irregular. <strong>No se suman automáticamente</strong> a las horas de las rotas para evitar duplicados. El saldo de irregular es una comparación matemática orientativa, no un derecho a exigir ni una deuda. La jornada irregular redistribuye horas de la jornada ordinaria, no aumenta por sí misma el total anual. No se calcula aquí ningún límite legal de horas complementarias.</div>
+</section>
 <section class="panel"><h2>¿Cómo se hace la regla de tres?</h2><p class="steps">1. Busca en el cartel las horas anuales de tu contrato.<br>2. Cuenta los días naturales desde tu fecha de incorporación hasta la fecha de consulta, ambos incluidos.<br>3. Multiplica las horas anuales por esos días y divide entre los 365 días que tiene 2026.<br>4. Compara la referencia con tus registros, pero no consideres la diferencia un saldo definitivo sin revisar incidencias.</p>
 <p class="note">Ejemplo: 25 h/semana → 1.116 h/año. Del 27/07/2026 al 31/12/2026 hay 158 días: 1.116 × 158 ÷ 365 = 483,02 h aproximadamente.</p>
 <p class="note"><strong>Advertencia sobre el cartel:</strong> algunos datos pueden requerir comprobación, en especial la fila de 16 h (877 h/año) y la combinación indicada para 32 h. Se han mantenido tal cual figuran en el material aportado, sin corregirlos ni extrapolarlos a otros años.</p>
@@ -101,22 +118,35 @@ function calc(){
  const b=good.test(end)?Date.parse(end+"T00:00:00Z"):NaN;
  const loggedRaw=$("logged").value.trim();
  const logged=loggedRaw===""?null:Number(loggedRaw);
- const invalid=!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<Date.parse("2026-01-01T00:00:00Z")||b>Date.parse("2026-12-31T00:00:00Z")||(logged!==null&&(!Number.isFinite(logged)||logged<0||logged>3000));
+ const complementaryOn=$("hasComplementary").value==="yes";
+ const irregularOn=$("hasIrregular").value==="yes";
+ $("complementaryField").hidden=!complementaryOn;
+ $("irregularField").hidden=!irregularOn;
+ const complementary=complementaryOn?Number($("complementary").value):0;
+ const irregularDone=irregularOn?Number($("irregularDone").value):0;
+ const validHours=x=>Number.isFinite(x)&&x>=0&&x<=3000;
+ const invalid=!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<Date.parse("2026-01-01T00:00:00Z")||b>Date.parse("2026-12-31T00:00:00Z")||(logged!==null&&!validHours(logged))||!validHours(complementary)||!validHours(irregularDone);
  $("validation").hidden=!invalid;$("validation").textContent=invalid?"Revisa las fechas y las horas introducidas: deben estar dentro de 2026, el final no puede ser anterior al inicio y las horas no pueden ser negativas.":"";
  $("proportionalResults").hidden=invalid;
+ $("extraResults").hidden=invalid;
  $("copy").disabled=invalid;
  if(invalid){$("method").textContent="";copyText="";return;}
  const days=Math.round((b-a)/86400000)+1;
  const prop=annual*days/365;
  const diff=logged===null?null:prop-logged;
+ const irregularProp=irregular*days/365;
+ $("complementaryShown").textContent=fmt2(complementary)+" h";
+ $("irregularShown").textContent=fmt2(irregularDone)+" h";
+ $("irregularProportional").textContent=fmt2(irregularProp)+" h";
+ $("irregularRemaining").textContent=fmt2(irregularProp-irregularDone)+" h";
  $("proportional").textContent=fmt2(prop)+" h";
  $("periodDays").textContent=String(days);
  $("shownLogged").textContent=logged===null?"Sin indicar":fmt2(logged)+" h";
  $("difference").textContent=diff===null?"Sin calcular":(diff>0?"+":"")+fmt2(diff)+" h";
  $("method").textContent="Regla de tres: "+fmt(annual)+" h × "+days+" días ÷ 365 = "+fmt2(prop)+" h. Período: "+start.split("-").reverse().join("/")+" a "+end.split("-").reverse().join("/")+".";
- copyText="CGT Primark Gran Vía · Simulación de jornada 2026\nContrato: "+label+"\nHoras anuales del cartel: "+annual+" h\nPeríodo: "+start+" a "+end+" ("+days+" días)\nReferencia proporcional: "+fmt2(prop)+" h\nHoras introducidas: "+(logged===null?"no indicadas":fmt2(logged)+" h")+"\nDiferencia orientativa: "+(diff===null?"no calculada":fmt2(diff)+" h")+"\nNo constituye una deuda o saldo laboral definitivo.";
+ copyText="CGT Primark Gran Vía · Simulación de jornada 2026\nContrato: "+label+"\nHoras anuales del cartel: "+annual+" h\nPeríodo: "+start+" a "+end+" ("+days+" días)\nReferencia proporcional: "+fmt2(prop)+" h\nHoras introducidas: "+(logged===null?"no indicadas":fmt2(logged)+" h")+"\nDiferencia orientativa: "+(diff===null?"no calculada":fmt2(diff)+" h")+"\nHoras complementarias declaradas: "+fmt2(complementary)+" h\nHoras de jornada irregular declaradas: "+fmt2(irregularDone)+" h\nReferencia irregular proporcional: "+fmt2(irregularProp)+" h\nDiferencia irregular orientativa: "+fmt2(irregularProp-irregularDone)+" h\nNo constituye una deuda o saldo laboral definitivo.";
 }
-["contract","start","end","logged"].forEach(id=>$(id).addEventListener("input",calc));
+["contract","start","end","logged","hasComplementary","complementary","hasIrregular","irregularDone"].forEach(id=>$(id).addEventListener("input",calc));
 $("copy").addEventListener("click",async()=>{if(!copyText)return;try{await navigator.clipboard.writeText(copyText);$("copy").textContent="Copiado";setTimeout(()=>$("copy").textContent="Copiar mi cálculo",1800)}catch{window.prompt("Copia el resultado:",copyText)}});
 $("print").addEventListener("click",()=>window.print());
 calc();
