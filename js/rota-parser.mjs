@@ -1,4 +1,4 @@
-import { add, date, duration } from './calculator.mjs?v=tabla-2026';
+import { add, date, duration } from './calculator.mjs?v=jornadas-2026-v2';
 
 export const normalize = value => value.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();

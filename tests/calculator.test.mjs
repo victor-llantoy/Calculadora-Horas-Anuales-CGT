@@ -5,14 +5,14 @@ import { startDate, parsePage, groupVersions, selectRecords } from '../js/rota-p
 import { buildPdf } from '../js/reports.mjs';
 
 test('referencias originales, fechas inclusivas y redondeo en minutos', () => {
-  assert.deepEqual(contracts.map(row => row.slice(1, 3)), [[1765,89],[1568,78],[1434,72],[1344,67],[1120,56],[1075,54],[896,45],[896,45],[806,40],[880,44],[538,27],[538,27]]);
+  assert.deepEqual(contracts.map(([label, ...values]) => [label.split(" · ")[0], ...values]), [["39,4 h", 1765, 88, 224, 5, 8], ["37,5 h", 1680, 84, 224, 5, 7.5], ["32 h", 1434, 72, 179, 4, 8], ["30 h", 1344, 67, 224, 5, 6], ["28 h", 1254, 63, 179, 4, 7], ["25 h", 1120, 56, 224, 5, 5], ["24 h", 1075, 54, 179, 4, 6], ["20 h", 896, 45, 224, 5, 4], ["18 h", 806, 40, 134, 3, 6], ["16 h", 880, 44, 110, 2, 8], ["12 h", 538, 27, 90, 2, 6]]);
   for (const contract of contracts) {
     assert.equal(reference(contract, '2026-01-01', '2026-12-31').ordinary, contract[1] * 60);
   }
-  assert.deepEqual(reference(contracts[4], '2026-07-27', '2026-12-31'), { days: 158, ordinary: 29089, irregular: 1454 });
+  assert.deepEqual(reference(contracts.find(([label]) => label.startsWith("25 h ")), '2026-07-27', '2026-12-31'), { days: 158, ordinary: 29089, irregular: 1454 });
   assert.equal((1120 * 158 / 365).toFixed(2), '484.82');
-  assert.equal(reference(contracts[4], '2026-12-31', '2026-12-31').days, 1);
-  assert.equal(reference(contracts[4], '2026-12-31', '2027-01-01'), null);
+  assert.equal(reference(contracts.find(([label]) => label.startsWith("25 h ")), '2026-12-31', '2026-12-31').days, 1);
+  assert.equal(reference(contracts.find(([label]) => label.startsWith("25 h ")), '2026-12-31', '2027-01-01'), null);
   assert.ok(Number.isNaN(date('2026-02-30')));
 });
 
