@@ -1,0 +1,33 @@
+name: Incorporar lector PDF local
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/vendor-pdfjs.yml'
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Descargar la versión fija de PDF.js al repositorio
+        run: |
+          npm install --no-save --no-package-lock pdfjs-dist@4.10.38
+          mkdir -p vendor
+          cp node_modules/pdfjs-dist/build/pdf.mjs vendor/pdf.mjs
+          cp node_modules/pdfjs-dist/build/pdf.worker.mjs vendor/pdf.worker.mjs
+      - name: Publicar biblioteca PDF.js en el mismo dominio
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add vendor/pdf.mjs vendor/pdf.worker.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "Incorporar PDF.js local para leer rotas sin subir documentos"
+            git push
+          fi
