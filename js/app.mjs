@@ -1,4 +1,4 @@
-import { contracts, date, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs';
+import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs';
 import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs';
 import { readRotas } from './pdf-reader.mjs';
 import { exportCsv, exportPdf } from './reports.mjs';
@@ -104,8 +104,8 @@ function manualInput(start, end) {
 function recalculate() {
   const contract = contracts[Number(value('contract'))];
   const [label, annual, irregular, yearDays, days, daily] = contract;
-  metrics('contractDetails', [['Horas anuales', format(annual * 60)], ['Irregular según cartel', format(irregular * 60)],
-    ['Distribución habitual', days + ' días × ' + format(daily * 60)], ['Días del cartel', yearDays]]);
+  metrics('contractDetails', [['Horas anuales', format(annual * 60)], ['Distribución irregular anual', format(irregular * 60)],
+    ['Distribución habitual', days + ' días × ' + format(daily * 60)], ['Días anuales de referencia', yearDays]]);
   const pdf = value('mode') === 'pdf';
   $('pdf').hidden = !pdf;
   $('manual').hidden = pdf;
@@ -136,14 +136,14 @@ function recalculate() {
   const irregularUsed = hasIrregular ? duration(value('irregular')) : 0;
   const stale = (hasComplementary || hasIrregular) && adjustmentPeriod !== null && adjustmentPeriod !== period;
   const comparison = available && !stale ? compare(summary.effective, supplementary, included, expected?.ordinary) : null;
-  const notices = [start + ' a ' + end + '.'];
-  if (!expected) notices.push('El cartel disponible solo permite comparar períodos íntegramente de 2026.');
+  const notices = [formatDate(start) + ' a ' + formatDate(end) + '.'];
+  if (!expected) notices.push('La referencia disponible solo permite comparar períodos íntegramente de 2026.');
   if (!available) notices.push('Introduce las horas del período para obtener la comparación.');
   if (stale) notices.push('Revisa y vuelve a introducir las horas complementarias e irregulares para este período.');
   if (available && !comparison && !stale) notices.push('Revisa las complementarias: indica ambas cantidades, y las ya incluidas no pueden superar las declaradas ni el total efectivo.');
   if (irregularUsed == null) notices.push('Indica las horas de distribución irregular en formato horas:minutos.');
   if (!pdf && data.mode !== 'total') notices.push('En la primera y última semana o mes, registra solo las horas comprendidas entre las fechas indicadas.');
-  if (data.holes.length) notices.push('Períodos sin cobertura completa: ' + data.holes.join(', ') + '.');
+  if (data.holes.length) notices.push('Períodos sin cobertura completa: ' + data.holes.map(formatDate).join(', ') + '.');
   if (pdf) {
     notices.push(documentCount + ' documentos seleccionados, ' + duplicateCount + ' duplicados omitidos.');
     if (warnings.length) notices.push('Hay avisos en el lector de rotas.');
@@ -165,7 +165,7 @@ function recalculate() {
     ['Complementarias ya incluidas', format(stale ? null : included)],
     ['Total con complementarias', format(comparison?.all)],
     ['Distribución irregular declarada', format(stale ? null : irregularUsed)],
-    ['Irregular anual según cartel', format(irregular * 60)],
+    ['Distribución irregular anual', format(irregular * 60)],
     ['Irregular proporcional orientativa', format(expected?.irregular)],
     ['Comparación irregular orientativa', format(expected && !stale && irregularUsed != null ? expected.irregular - irregularUsed : null)],
     ['Diferencia provisional (referencia − ordinarias)', format(data.holes.length || pdf && warnings.length ? null : comparison?.difference)]
@@ -198,11 +198,11 @@ function renderDetail(records, pdf, net, mode) {
     for (const [month, minutes] of [...months].sort()) {
       const line = node('div', null, detail);
       line.className = 'month';
-      node('span', month, line);
+      node('span', formatDate(month), line);
       const meter = node('meter', null, line);
       meter.max = max;
       meter.value = minutes;
-      meter.setAttribute('aria-label', month + ' · ' + format(minutes));
+      meter.setAttribute('aria-label', formatDate(month) + ' · ' + format(minutes));
       node('span', format(minutes), line);
     }
   }
@@ -212,11 +212,11 @@ function renderDetail(records, pdf, net, mode) {
     const sum = totals(rows);
     const group = node('details', null, detail);
     group.open = true;
-    node('summary', key + ' · ' + format(sum.effective), group);
+    node('summary', formatDate(mode === 'monthly' ? key.slice(0, 7) : key) + ' · ' + format(sum.effective), group);
     if (pdf) node('p', (rows.length - sum.vacation) + ' días trabajados · ' + sum.vacation + ' marcas V', group);
     if (!net) node('p', 'Presencia ' + format(sum.presence) + ' · Descansos ' + format(sum.rest), group);
     if (pdf) for (const row of rows) {
-      node('p', row.date + ' · ' + (row.kind === 'vacation' ? 'Vacaciones (V)' :
+      node('p', formatDate(row.date) + ' · ' + (row.kind === 'vacation' ? 'Vacaciones (V)' :
         clock(row.in) + ' a ' + clock(row.out) + ' · descanso ' + format(row.rest) + ' · efectivo ' + format(row.presence - row.rest)), group);
     }
   }
@@ -268,11 +268,11 @@ function showTurns(records) {
     const currentWeek = week(row.date);
     if (lastWeek !== currentWeek) {
       group = node('details', null, container);
-      node('summary', 'Semana del ' + currentWeek, group);
+      node('summary', 'Semana del ' + formatDate(currentWeek), group);
       lastWeek = currentWeek;
     }
-    if (row.kind === 'vacation') { node('p', row.date + ' · Vacaciones (V)', group); continue; }
-    const label = node('label', row.date + ' · ' + clock(row.in) + '–' + clock(row.out) + ' · descanso (min)', group);
+    if (row.kind === 'vacation') { node('p', formatDate(row.date) + ' · Vacaciones (V)', group); continue; }
+    const label = node('label', formatDate(row.date) + ' · ' + clock(row.in) + '–' + clock(row.out) + ' · descanso (min)', group);
     const input = node('input', null, label);
     input.type = 'number';
     input.min = '0';
@@ -294,11 +294,11 @@ function showVersions() {
   container.replaceChildren();
   for (const [start, versions] of groups) {
     if (versions.length === 1) continue;
-    const label = node('label', 'Rota en conflicto para ' + start, container);
+    const label = node('label', 'Rota en conflicto para ' + formatDate(start), container);
     const select = node('select', null, label);
     node('option', 'Elegir versión', select).value = '';
     versions.forEach((version, index) => {
-      const shifts = version.records.map(row => row.date + ' ' + (row.kind === 'vacation' ? 'V' : clock(row.in) + '–' + clock(row.out)));
+      const shifts = version.records.map(row => formatDate(row.date) + ' ' + (row.kind === 'vacation' ? 'V' : clock(row.in) + '–' + clock(row.out)));
       node('option', 'Documento ' + version.number + ' · ' + (shifts.join(', ') || 'sin turnos') +
         (version.issues.length ? ' · con avisos' : ''), select).value = String(index);
     });
@@ -431,10 +431,10 @@ $('csv').addEventListener('click', () => {
     ['Semana','Días trabajados','Vacaciones V','Presencia min','Descanso min','Efectivo min'],
     ...[...weekly].sort().map(([day, rows]) => {
       const sum = totals(rows);
-      return [day, pdf ? rows.length - sum.vacation : '', pdf ? sum.vacation : '', net ? '' : sum.presence, net ? '' : sum.rest, sum.effective];
+      return [formatDate(day), pdf ? rows.length - sum.vacation : '', pdf ? sum.vacation : '', net ? '' : sum.presence, net ? '' : sum.rest, sum.effective];
     }), [], ['Fecha','Tipo','Entrada','Salida','Presencia min','Descanso min','Efectivo min'],
-    ...records.map(row => row.kind === 'vacation' ? [row.date,'Vacaciones (V)'] :
-      [row.date,row.kind === 'shift' ? 'Turno' : 'Registro manual', row.in == null ? '' : clock(row.in),
+    ...records.map(row => row.kind === 'vacation' ? [formatDate(row.date),'Vacaciones (V)'] :
+      [formatDate(row.date),row.kind === 'shift' ? 'Turno' : 'Registro manual', row.in == null ? '' : clock(row.in),
         row.out == null ? '' : clock(row.out), net ? '' : row.presence, net ? '' : row.rest, row.presence - row.rest])]);
 });
 $('downloadPdf').addEventListener('click', () => {

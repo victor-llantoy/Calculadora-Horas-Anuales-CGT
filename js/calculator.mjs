@@ -1,17 +1,18 @@
 export const contracts=[
 ["39,5 h · 5 días/semana",1765,88,224,5,8],
 ["35 h · 5 días/semana",1563,78,224,5,7],
-["32 h · 5 días/semana (según cartel)",1429,71,179,5,6.5],
+["32 h · 5 días/semana",1429,71,179,5,6.5],
 ["30 h · 5 días/semana",1340,67,224,5,6],
 ["25 h · 5 días/semana",1116,55,224,5,5],
 ["24 h · 4 días/semana",1071,53,179,4,6],
 ["20 h · 5 días/semana",893,44,224,5,4],
 ["20 h · 4 días/semana",893,44,179,4,5],
 ["18 h · 3 días/semana",803,40,110,3,6],
-["16 h · 2 días/semana (revisar cartel)",877,43,110,2,8],
+["16 h · 2 días/semana",877,43,110,2,8],
 ["12 h · 2 días/semana",536,26,90,2,6],
 ["12 h · 3 días/semana",536,26,134,3,4]
 ];
+export const formatDate = day => day.split('-').reverse().join('/');
 const DAY = 86400000;
 export function date(value) {
   const parsed = new Date(value + 'T00:00:00Z');

@@ -1,3 +1,4 @@
+import { formatDate } from './calculator.mjs';
 import { parsePage, startDate } from './rota-parser.mjs';
 
 export async function readRotas(files, name, signal, progress) {
@@ -33,7 +34,7 @@ export async function readRotas(files, name, signal, progress) {
         continue;
       }
       const [{ records, issues }] = matching;
-      if (issues.length) warnings.push('Documento ' + number + ': revisar ' + issues.join(', ') + '.');
+      if (issues.length) warnings.push('Documento ' + number + ': revisar ' + issues.map(formatDate).join(', ') + '.');
       documents.push({ start, number, records, issues });
     } catch {
       signal.throwIfAborted();
