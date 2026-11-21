@@ -1,6 +1,6 @@
-import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=horas-2026';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=horas-2026';
-import { readRotas } from './pdf-reader.mjs?v=horas-2026';
+import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=tabla-2026';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=tabla-2026';
+import { readRotas } from './pdf-reader.mjs?v=tabla-2026';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);
@@ -444,7 +444,15 @@ $('downloadPdf').addEventListener('click', () => {
   exportPdf([...summaryLines(), '', 'Detalle de horas', ...detail]);
 });
 $('print').addEventListener('click', () => window.print());
-contracts.forEach(([label], index) => { node('option', label, $('contract')).value = String(index); });
+contracts.forEach(([label, annual, irregular, yearDays, weekDays, daily], index) => {
+  node('option', label, $('contract')).value = String(index);
+  const row = node('tr', null, $('contractRows'));
+  node('th', label.split(' · ')[0], row).scope = 'row';
+  for (const cell of [yearDays, weekDays, format(daily * 60), format(annual * 60), format(irregular * 60)]) {
+    node('td', cell, row);
+  }
+});
+if (location.hash === '#tabla-jornadas') $('tabla-jornadas').open = true;
 manualPeriod = value('start') + '/' + value('end');
 if (new URLSearchParams(location.search).get('modo') === 'pdf') $('mode').value = 'pdf';
 addEntry();

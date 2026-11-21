@@ -56,11 +56,15 @@ try {
   assert.doesNotMatch(await page.locator('body').innerText(), /cartel/i);
   assert.doesNotMatch(await page.locator('#contract').textContent(), /cartel/i);
   assert.match(await page.locator('#contractDetails').innerText(), /1\.765 h/);
+  await page.locator('#tabla-jornadas summary').click();
+  assert.equal(await page.locator('#contractRows tr').count(), 12);
+  assert.deepEqual(await page.locator('#contractRows tr').first().locator('td').allTextContents(), ['224','5','8 h','1.765 h','89 h']);
   await page.selectOption('#contract','4');
+  assert.match(await page.locator('#contractDetails').innerText(), /1\.120 h/);
   await page.fill('#start','2026-07-27');
   await page.locator('#start').dispatchEvent('change');
-  await page.locator('[data-field=amount]').fill('483:05');
-  assert.match(await page.locator('#summary').innerText(), /483,08 h/);
+  await page.locator('[data-field=amount]').fill('484:49');
+  assert.match(await page.locator('#summary').innerText(), /484,82 h/);
   assert.equal(await page.locator('#csv').isEnabled(), true);
   await page.click('#copy');
   await page.waitForFunction(() => document.querySelector('#exportStatus').textContent.includes('copiado'));

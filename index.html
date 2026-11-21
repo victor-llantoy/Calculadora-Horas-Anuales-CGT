@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#111111">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
-<link rel="stylesheet" href="css/styles.css">
-<script type="module" src="js/app.mjs?v=horas-2026"></script>
+<link rel="stylesheet" href="css/styles.css?v=tabla-2026">
+<script type="module" src="js/app.mjs?v=tabla-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -22,6 +22,16 @@
 <h2>Mi contrato</h2>
 <label for="contract">Jornada semanal y días habituales</label><select id="contract"></select>
 <dl class="metrics" id="contractDetails"></dl>
+<details id="tabla-jornadas">
+<summary>Ver tabla de jornadas 2026</summary>
+<div class="contract-table-wrap" role="region" aria-label="Tabla de jornadas 2026" tabindex="0">
+<table class="contract-table">
+<thead><tr><th scope="col">Jornada semanal</th><th scope="col">Días al año</th><th scope="col">Días por semana</th><th scope="col">Horas diarias</th><th scope="col">Horas anuales</th><th scope="col">Distribución irregular anual</th></tr></thead>
+<tbody id="contractRows"></tbody>
+</table>
+</div>
+<p class="note">Consulta las horas anuales en la fila que corresponda a tu jornada semanal y a tus días habituales.</p>
+</details>
 <p class="note">La referencia de jornada completa es de 39,5 h semanales, aunque a veces el contrato se denomine «de 40 horas». Las filas de 16 h y 32 h están pendientes de cotejo.</p>
 </section>
 <section class="panel" id="horas">
@@ -68,7 +78,7 @@
 <section class="panel" id="resultados">
 <h2>Mis resultados</h2>
 <p id="notice" role="status"></p>
-<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.116 × 158 ÷ 365 = 483,09 h antes del redondeo al minuto. El resultado mostrado tras ese redondeo es 483,08 h.</p></details>
+<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.120 × 158 ÷ 365 ≈ 484,82 h.</p></details>
 <dl id="summary" class="metrics"></dl>
 <h3>Vacaciones</h3>
 <p id="vacation"></p>
