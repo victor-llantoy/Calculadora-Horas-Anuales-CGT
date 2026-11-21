@@ -1,326 +1,86 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#111111"><title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
-<style>
-:root{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#171717;background:#f5f5f5;font-synthesis:none}
-*{box-sizing:border-box}body{margin:0}a{color:inherit}.wrap{width:min(900px,calc(100% - 32px));margin:auto}
-header{background:#111;color:#fff;border-bottom:5px solid #d71920}.head{display:flex;justify-content:space-between;align-items:center;padding:20px 0;gap:12px;flex-wrap:wrap}
-.brand{font-weight:900;letter-spacing:.035em;line-height:1.3}.brand small{display:block;font-size:12px;letter-spacing:.10em;color:#eee;font-weight:600}.back{font-size:13px;color:white;text-decoration:none;border:1px solid #666;padding:9px 12px;border-radius:8px}
-main{padding:28px 0 48px}h1{font-size:clamp(26px,5vw,38px);line-height:1.15;margin:8px 0}h2{font-size:22px;margin:0 0 8px}p{line-height:1.6;margin:8px 0 14px}.intro{color:#515151;max-width:750px}.eyebrow{font-size:12px;font-weight:800;color:#b81920;letter-spacing:.09em;text-transform:uppercase}
-.panel{background:white;border:1px solid #dedede;border-radius:16px;padding:clamp(16px,3vw,26px);margin-top:20px;box-shadow:0 2px 12px #00000007}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{min-width:0}.field.full{grid-column:1/-1}
-label{display:block;font-weight:750;font-size:13px;margin:0 0 7px}select,input{display:block;width:100%;min-width:0;height:46px;padding:10px 12px;border:1px solid #bcbcbc;border-radius:9px;background:#fff;color:#191919;font:inherit;font-size:16px}
-input:focus,select:focus{outline:3px solid #f9c7c8;outline-offset:1px;border-color:#ba1921}
-.note{font-size:13px;color:#5a5a5a}.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
-.metric{padding:18px 14px;background:#f5f5f5;border-radius:12px;min-width:0}.metric.feature{background:#171717;color:#fff}
-.metric span{display:block;font-size:12px;margin-bottom:5px;color:inherit;opacity:.76}.metric strong{font-size:clamp(23px,5vw,30px);font-variant-numeric:tabular-nums;word-break:break-word}.metric small{display:block;font-size:12px;margin-top:4px}
-.alert{border-left:4px solid #d71920;background:#fff4f4;border-radius:5px;padding:12px 14px;font-size:13px;line-height:1.55}
-.ok{border-left-color:#555;background:#f3f3f3}.steps{font-size:14px;line-height:1.7;color:#444}
-.btn{border:0;background:#c81920;color:#fff;border-radius:9px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer}
-.btn:focus-visible{outline:3px solid #111;outline-offset:3px}.btn:hover{background:#a61219}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.subtle{background:#e9e9e9;color:#111}.subtle:hover{background:#d7d7d7}
-footer{background:#111;color:#f4f4f4;font-size:13px;padding:22px 0}footer p{margin:0}
-@media(max-width:520px){.grid,.results{grid-template-columns:1fr}.metric strong{font-size:27px}.head{align-items:flex-start}main{padding-top:22px}}
-@media print{header,footer,.actions{display:none}body{background:white}.panel{box-shadow:none;break-inside:avoid}main{padding:0}.wrap{width:100%}}
-
-/* Lector PDF integrado */
-#pdf-tool{scroll-margin-top:15px}#pdf-tool .help{color:#555;font-size:14px}#pdf-tool .notice{background:#f0f0f0;border-left:4px solid #555;padding:12px;margin-top:12px;font-size:14px}
-#pdf-tool .totals{display:flex;gap:10px;flex-wrap:wrap}#pdf-tool .stat{flex:1;min-width:180px;background:#f0f0f0;border-radius:10px;padding:15px}#pdf-tool .stat strong{display:block;font-size:27px;margin-top:5px}
-#pdf-tool table{border-collapse:collapse;width:100%;font-size:14px}#pdf-tool td,#pdf-tool th{padding:9px 7px;border-bottom:1px solid #ddd;text-align:left}#pdf-tool th{background:#f2f2f2}
-#pdf-tool .scroll{overflow-x:auto}#pdf-tool [hidden]{display:none!important}#pdf-tool #status{white-space:pre-wrap}#pdf-tool .warnings{color:#a20b12;white-space:pre-wrap}
-#pdf-tool button{cursor:pointer;border:0;background:#c81920;color:white;padding:12px 16px;border-radius:9px;font:inherit;font-weight:700;margin-top:8px}
-#pdf-tool button.secondary{background:#333}#pdf-tool button:disabled{opacity:.5;cursor:not-allowed}
-#pdf-tool input[type=file]{height:auto;background:#fafafa}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111111">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
+<link rel="stylesheet" href="css/styles.css">
+<script type="module" src="js/app.mjs"></script>
 </head>
 <body>
-<header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div></div></header>
+<header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
 <main class="wrap">
-<p class="eyebrow">Herramientas · Jornada laboral</p><h1>Calculadora de Horas Anuales CGT</h1>
-<p class="intro">Consulta las horas anuales de tu contrato y estima las que te corresponden si no has trabajado todo el año. Sin nombres, sin subir rotas y sin almacenar tus datos: los cálculos se hacen en este navegador.</p>
-<nav class="panel" aria-label="Métodos de cálculo"><strong>Todo en esta página</strong><p>Elige el cálculo manual o analiza tus rotas PDF de forma local, sin subir archivos a servidores.</p><div class="actions"><a class="btn" style="text-decoration:none" href="#title1">Cálculo manual</a><a class="btn subtle" style="text-decoration:none" href="#pdf-tool">Leer mis rotas PDF</a></div></nav>
-<section class="panel" aria-labelledby="title1"><h2 id="title1">1. Jornada anual según tu contrato</h2>
-<p class="note">Cifras transcritas del cartel de CGT Primark Gran Vía para 2026. Selecciona también la distribución de días de tu jornada cuando haya más de una opción.</p>
-<div class="grid"><div class="field full"><label for="contract">Horas de contrato y distribución</label><select id="contract"></select></div></div>
-<div class="results" aria-live="polite">
-<div class="metric feature"><span>Horas anuales de referencia</span><strong id="annual">—</strong></div>
-<div class="metric"><span>Distribución irregular anual (5 %, según cartel)</span><strong id="irregular">—</strong></div>
-<div class="metric"><span>Días al año indicados</span><strong id="daysYear">—</strong></div>
-<div class="metric"><span>Jornada habitual</span><strong id="pattern">—</strong></div>
+<div class="intro-block">
+<p class="eyebrow">Jornada laboral · 2026</p>
+<h1>Calculadora de horas anuales</h1>
+<p class="intro">Compara tu jornada con el cartel de CGT. Introduce tus horas o lee tus rotas en este navegador.</p>
+<nav aria-label="Apartados"><a href="#contrato">Mi contrato</a><a href="#horas">Mis horas</a><a href="#ajustes">Complementarias e irregular</a><a href="#resultados">Mis resultados</a><a href="#informe">Informe</a></nav>
 </div>
-<div class="alert ok">El 5 % de jornada irregular no se suma a las horas anuales: se refiere a la distribución de una parte de la jornada. La aplicación reproduce las cifras del cartel y no interpreta si procede utilizar ese 5 % en un caso concreto.</div>
+<section class="panel" id="contrato">
+<h2>Mi contrato</h2>
+<label for="contract">Jornada semanal y días habituales</label><select id="contract"></select>
+<dl class="metrics" id="contractDetails"></dl>
+<p class="note">La referencia de jornada completa del cartel es de 39,5 h semanales, aunque a veces el contrato se denomine «de 40 horas». Las filas de 16 h y 32 h están pendientes de cotejo.</p>
 </section>
-<section class="panel" aria-labelledby="title2"><h2 id="title2">2. Horas proporcionales por fecha de incorporación</h2>
-<p class="note">Ejemplo: alguien que empezó el 27/07/2026 no tendría por qué completar la jornada anual íntegra de una persona contratada desde enero.</p>
+<section class="panel" id="horas">
+<h2>Mis horas</h2>
+<label for="mode">Cómo quieres introducir tus horas</label>
+<select id="mode"><option value="manual">Introducir horas manualmente</option><option value="pdf">Leer mis rotas PDF</option></select>
+<div id="manual">
 <div class="grid">
-<div class="field"><label for="start">Fecha de inicio</label><input type="date" id="start" min="2026-01-01" max="2026-12-31" value="2026-07-27"></div>
-<div class="field"><label for="end">Calcular hasta</label><input type="date" id="end" min="2026-01-01" max="2026-12-31" value="2026-12-31"></div>
-<div class="field full"><label for="logged">Horas que has contado en tus rotas (opcional)</label><input id="logged" type="number" min="0" max="3000" step="0.01" inputmode="decimal" placeholder="Ej.: 295"><p class="note">Introduce las horas correspondientes exactamente al mismo período seleccionado. No introduzcas tu nombre ni datos de otra persona.</p></div>
+<div><label for="start">Inicio del período</label><input type="date" id="start" value="2026-01-01"></div>
+<div><label for="end">Fin del período</label><input type="date" id="end" value="2026-12-31"></div>
+<div><label for="entryMode">Cómo registrar el tiempo</label><select id="entryMode"><option value="total">Total del período</option><option value="weekly">Por semanas</option><option value="monthly">Por meses</option></select></div>
+<div><label for="manualKind">Qué incluyen tus horas</label><select id="manualKind"><option value="net">Trabajo efectivo (horas netas)</option><option value="gross">Presencia (antes de descansos)</option></select></div>
 </div>
-<div id="validation" role="alert" class="alert" hidden></div>
-<div class="results" id="proportionalResults" aria-live="polite">
-<div class="metric feature"><span>Horas proporcionales estimadas</span><strong id="proportional">—</strong></div>
-<div class="metric"><span>Días naturales incluidos</span><strong id="periodDays">—</strong></div>
-<div class="metric"><span>Horas de tus rotas introducidas</span><strong id="shownLogged">—</strong></div>
-<div class="metric"><span>Diferencia orientativa (referencia − rotas)</span><strong id="difference">—</strong></div>
+<div id="entries"></div><button id="addEntry" class="btn subtle" type="button" hidden>Añadir período</button>
+<p class="note">Escribe horas:minutos, por ejemplo 37:30. Para semanas, usa el lunes. Para meses, usa el día 1.</p>
 </div>
-<p id="method" class="steps" aria-live="polite"></p>
-<div class="alert"><strong>Importante:</strong> la diferencia NO es una deuda de horas. Las rotas muestran horas planificadas, no necesariamente fichadas ni todas las horas computables. Hay que revisar vacaciones, permisos, bajas, semanas sin rota, festivos, cambios de contrato y el calendario laboral aplicable. La regla de tres es orientativa.</div>
-<div class="actions"><button id="copy" type="button" class="btn">Copiar mi cálculo</button><button id="print" type="button" class="btn subtle">Imprimir resultado</button></div>
-</section>
-<section class="panel" aria-labelledby="title3">
-<h2 id="title3">3. Horas complementarias y jornada irregular</h2>
-<p class="note">Introduce únicamente las horas realizadas durante el mismo período de fechas que has elegido arriba. Estos conceptos se contabilizan por separado.</p>
+<div id="pdf" hidden>
+<p class="note">El nombre y los archivos se usan en esta pestaña. Los informes omiten el nombre y los archivos originales.</p>
 <div class="grid">
-<div class="field"><label for="hasComplementary">¿Has realizado horas complementarias?</label><select id="hasComplementary"><option value="no">No</option><option value="yes">Sí</option></select></div>
-<div class="field" id="complementaryField" hidden><label for="complementary">¿Cuántas horas complementarias?</label><input id="complementary" type="number" min="0" max="3000" step="0.01" inputmode="decimal" value="0"></div>
-<div class="field"><label for="hasIrregular">¿Te han aplicado jornada irregular?</label><select id="hasIrregular"><option value="no">No</option><option value="yes">Sí</option></select></div>
-<div class="field" id="irregularField" hidden><label for="irregularDone">¿Cuántas horas de jornada irregular?</label><input id="irregularDone" type="number" min="0" max="3000" step="0.01" inputmode="decimal" value="0"></div>
+<div><label for="files">Rotas PDF</label><input type="file" id="files" accept=".pdf,application/pdf" multiple></div>
+<div><label for="name">Nombre completo tal como aparece en la rota</label><input id="name" autocomplete="off" spellcheck="false"></div>
+<div><label for="year">Año de los turnos que quieres contar</label><input id="year" type="number" min="2000" max="2099" value="2026"></div>
+<div><label for="rule">Descontar 30 minutos</label><select id="rule"><option value="0">Solo cuando lo indique en el turno</option><option value="1">En todos los turnos de al menos 30 min</option><option value="360">Desde 6 horas de presencia</option><option value="480">Desde 8 horas de presencia</option></select></div>
 </div>
-<div class="results" id="extraResults" aria-live="polite">
-<div class="metric"><span>Horas complementarias indicadas</span><strong id="complementaryShown">0 h</strong></div>
-<div class="metric"><span>Horas irregulares indicadas</span><strong id="irregularShown">0 h</strong></div>
-<div class="metric"><span>Referencia irregular proporcional según cartel</span><strong id="irregularProportional">—</strong></div>
-<div class="metric"><span>Referencia irregular menos horas indicadas</span><strong id="irregularRemaining">—</strong></div>
+<div class="actions"><button id="run" class="btn" type="button">Analizar rotas</button><button id="cancel" class="btn subtle" type="button" disabled>Cancelar análisis</button></div>
+<progress id="progress" hidden aria-label="Progreso de lectura"></progress>
+<p id="pdfStatus" role="status"></p>
+<ul id="warnings"></ul>
+<div id="versions"></div>
+<div id="turns"></div>
+<button id="apply" class="btn" type="button" disabled>Utilizar estas horas en mi cálculo anual</button>
 </div>
-<div class="alert ok">Las horas complementarias son distintas de la distribución irregular. <strong>No se suman automáticamente</strong> a las horas de las rotas para evitar duplicados. El saldo de irregular es una comparación matemática orientativa, no un derecho a exigir ni una deuda. La jornada irregular redistribuye horas de la jornada ordinaria, no aumenta por sí misma el total anual. No se calcula aquí ningún límite legal de horas complementarias.</div>
 </section>
-<section class="panel"><h2>¿Cómo se hace la regla de tres?</h2><p class="steps">1. Busca en el cartel las horas anuales de tu contrato.<br>2. Cuenta los días naturales desde tu fecha de incorporación hasta la fecha de consulta, ambos incluidos.<br>3. Multiplica las horas anuales por esos días y divide entre los 365 días que tiene 2026.<br>4. Compara la referencia con tus registros, pero no consideres la diferencia un saldo definitivo sin revisar incidencias.</p>
-<p class="note">Ejemplo: 25 h/semana → 1.116 h/año. Del 27/07/2026 al 31/12/2026 hay 158 días: 1.116 × 158 ÷ 365 = 483,02 h aproximadamente.</p>
-<p class="note"><strong>Advertencia sobre el cartel:</strong> algunos datos pueden requerir comprobación, en especial la fila de 16 h (877 h/año) y la combinación indicada para 32 h. Se han mantenido tal cual figuran en el material aportado, sin corregirlos ni extrapolarlos a otros años.</p>
-</section>
-<div id="pdf-tool" aria-labelledby="pdf-title"><section class="panel"><h2 id="pdf-title">4. Leer mis rotas PDF en privado</h2><p>Selecciona tus rotas y escribe tu nombre tal como aparece en ellas. Los archivos se procesan solamente en este navegador; puedes seguir haciendo el cálculo manual arriba.</p></section><section class="panel"><h2>Selecciona tus archivos</h2>
+<section class="panel" id="ajustes">
+<h2>Complementarias y jornada irregular</h2>
+<p class="note">Indica solo las horas del período seleccionado. La distribución irregular forma parte de la jornada ordinaria.</p>
 <div class="grid">
-<div><label for="files">Rotas PDF (puedes seleccionar varias)</label><input id="files" type="file" accept="application/pdf,.pdf" multiple></div>
-<div><label for="name">Tu nombre completo</label><input id="name" autocomplete="off" placeholder="Ej.: APELLIDOS, NOMBRE"></div>
-<div><label for="year">Año que deseas calcular</label><input id="year" type="number" min="2020" max="2100" value="2026"></div>
-<div><label for="breakRule">Descontar descansos no computables</label><select id="breakRule">
-<option value="none">No descontar (horas ya netas)</option>
-<option value="8">30 minutos en turnos de 8 h o más</option>
-<option value="6">30 minutos en turnos de 6 h o más</option>
-</select></div>
+<div><label for="hasComplementary">¿Has realizado horas complementarias?</label><select id="hasComplementary"><option value="no">No</option><option value="yes">Sí</option></select></div>
+<div id="complementaryFields" hidden><label for="complementary">Complementarias realizadas (horas:minutos)</label><input id="complementary" placeholder="0:00" autocomplete="off"><label for="included">De ellas, horas ya incluidas en el total anterior</label><input id="included" placeholder="0:00" autocomplete="off"></div>
+<div><label for="hasIrregular">¿Te han aplicado distribución irregular de jornada?</label><select id="hasIrregular"><option value="no">No</option><option value="yes">Sí</option></select></div>
+<div id="irregularFields" hidden><label for="irregular">Horas de distribución irregular (horas:minutos)</label><input id="irregular" placeholder="0:00" autocomplete="off"></div>
 </div>
-<p class="help">Revisa la regla de descanso que corresponda a tus horarios; la aplicación no puede conocerla automáticamente. No se suman vacaciones marcadas como V.</p>
-<button id="run" type="button">Analizar mis rotas</button> <button id="clear" class="secondary" type="button">Borrar datos</button>
-<p id="status" role="status"></p><div id="warnings" class="warnings" aria-live="polite"></div>
-<div class="notice"><strong>Privacidad:</strong> el lector PDF está alojado en esta misma web; no se utilizan servicios externos para extraer datos. Los documentos y resultados se mantienen solo en la memoria de esta pestaña. No se guardan en el dispositivo de forma permanente. No se muestra información de otros empleados. Utiliza únicamente rotas a las que tengas acceso legítimo.</div>
 </section>
-<section id="results" class="panel" hidden>
-<h2>Comprueba tu resultado</h2>
-<div class="totals">
-<div class="stat">Presencia programada<strong id="gross">—</strong></div>
-<div class="stat">Descansos descontados<strong id="breaks">—</strong></div>
-<div class="stat">Trabajo efectivo estimado<strong id="net">—</strong></div>
-</div>
-<p class="help">No sustituyen los fichajes reales. Revisa fechas, turnos nocturnos, descansos, permisos y posibles cambios de rota.</p>
-<div class="scroll"><table><thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Presencia</th><th>Descanso</th><th>Trabajo estimado</th><th>Archivo</th></tr></thead><tbody id="shiftRows"></tbody></table></div>
-<div style="margin-top:16px"><button id="csv" type="button">Descargar mi recuento CSV</button> <button id="applyPdf" class="secondary" type="button">Utilizar estas horas en el cálculo manual</button><p id="applyNote" class="help" aria-live="polite"></p></div>
+<section class="panel" id="resultados">
+<h2>Mis resultados</h2>
+<p id="notice" role="status"></p>
+<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo del cartel de 25 h semanales, del 27/07 al 31/12: 1.116 × 158 ÷ 365 = 483,09 h decimales, que se muestran como 483 h 05 min.</p></details>
+<dl id="summary" class="metrics"></dl>
+<h3>Vacaciones</h3>
+<p id="vacation"></p>
+<p class="note">El convenio contempla 31 días naturales de vacaciones anuales. Las marcas V de las rotas solo identifican fechas visibles y se muestran por separado. La diferencia es orientativa y no acredita horas pendientes de recuperación.</p>
 </section>
-</div>
+<section class="panel" id="informe">
+<h2>Informe</h2>
+<p class="note">Descarga el resumen y el desglose disponibles para tu período.</p>
+<div class="actions"><button id="copy" class="btn subtle" type="button">Copiar resumen</button><button id="csv" class="btn subtle" type="button">Descargar CSV detallado</button><button id="downloadPdf" class="btn" type="button">Descargar PDF</button><button id="print" class="btn subtle" type="button">Imprimir</button></div>
+<p id="exportStatus" role="status"></p>
+<div id="detail"></div>
+</section>
 </main>
-<footer><div class="wrap"><p>CGT Primark Gran Vía · Herramienta informativa de 2026. No constituye una certificación del cómputo laboral individual.</p></div></footer>
-<script>
-"use strict";
-const rows=[
-["39,5 h · 5 días/semana",1765,88,224,5,8],
-["35 h · 5 días/semana",1563,78,224,5,7],
-["32 h · 5 días/semana (según cartel)",1429,71,179,5,6.5],
-["30 h · 5 días/semana",1340,67,224,5,6],
-["25 h · 5 días/semana",1116,55,224,5,5],
-["24 h · 4 días/semana",1071,53,179,4,6],
-["20 h · 5 días/semana",893,44,224,5,4],
-["20 h · 4 días/semana",893,44,179,4,5],
-["18 h · 3 días/semana",803,40,110,3,6],
-["16 h · 2 días/semana (revisar cartel)",877,43,110,2,8],
-["12 h · 2 días/semana",536,26,90,2,6],
-["12 h · 3 días/semana",536,26,134,3,4]
-];
-const $=id=>document.getElementById(id);
-const fmt=x=>Number(x).toLocaleString("es-ES",{minimumFractionDigits:0,maximumFractionDigits:2});
-const fmt2=x=>Number(x).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2});
-rows.forEach((row,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=row[0];$("contract").append(o)});
-$("contract").value="4";
-let copyText="";
-function calc(){
- const row=rows[Number($("contract").value)];
- const [label,annual,irregular,yearDays,weekDays,daily]=row;
- $("annual").textContent=fmt(annual)+" h";
- $("irregular").textContent=fmt(irregular)+" h";
- $("daysYear").textContent=String(yearDays)+" días";
- $("pattern").textContent=weekDays+" días × "+fmt(daily)+" h";
- const start=$("start").value,end=$("end").value;
- const good=/^2026-\d\d-\d\d$/;
- const a=good.test(start)?Date.parse(start+"T00:00:00Z"):NaN;
- const b=good.test(end)?Date.parse(end+"T00:00:00Z"):NaN;
- const loggedRaw=$("logged").value.trim();
- const logged=loggedRaw===""?null:Number(loggedRaw);
- const complementaryOn=$("hasComplementary").value==="yes";
- const irregularOn=$("hasIrregular").value==="yes";
- $("complementaryField").hidden=!complementaryOn;
- $("irregularField").hidden=!irregularOn;
- const complementary=complementaryOn?Number($("complementary").value):0;
- const irregularDone=irregularOn?Number($("irregularDone").value):0;
- const validHours=x=>Number.isFinite(x)&&x>=0&&x<=3000;
- const invalid=!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<Date.parse("2026-01-01T00:00:00Z")||b>Date.parse("2026-12-31T00:00:00Z")||(logged!==null&&!validHours(logged))||!validHours(complementary)||!validHours(irregularDone);
- $("validation").hidden=!invalid;$("validation").textContent=invalid?"Revisa las fechas y las horas introducidas: deben estar dentro de 2026, el final no puede ser anterior al inicio y las horas no pueden ser negativas.":"";
- $("proportionalResults").hidden=invalid;
- $("extraResults").hidden=invalid;
- $("copy").disabled=invalid;
- if(invalid){$("method").textContent="";copyText="";return;}
- const days=Math.round((b-a)/86400000)+1;
- const prop=annual*days/365;
- const diff=logged===null?null:prop-logged;
- const irregularProp=irregular*days/365;
- $("complementaryShown").textContent=fmt2(complementary)+" h";
- $("irregularShown").textContent=fmt2(irregularDone)+" h";
- $("irregularProportional").textContent=fmt2(irregularProp)+" h";
- $("irregularRemaining").textContent=fmt2(irregularProp-irregularDone)+" h";
- $("proportional").textContent=fmt2(prop)+" h";
- $("periodDays").textContent=String(days);
- $("shownLogged").textContent=logged===null?"Sin indicar":fmt2(logged)+" h";
- $("difference").textContent=diff===null?"Sin calcular":(diff>0?"+":"")+fmt2(diff)+" h";
- $("method").textContent="Regla de tres: "+fmt(annual)+" h × "+days+" días ÷ 365 = "+fmt2(prop)+" h. Período: "+start.split("-").reverse().join("/")+" a "+end.split("-").reverse().join("/")+".";
- copyText="CGT Primark Gran Vía · Simulación de jornada 2026\nContrato: "+label+"\nHoras anuales del cartel: "+annual+" h\nPeríodo: "+start+" a "+end+" ("+days+" días)\nReferencia proporcional: "+fmt2(prop)+" h\nHoras introducidas: "+(logged===null?"no indicadas":fmt2(logged)+" h")+"\nDiferencia orientativa: "+(diff===null?"no calculada":fmt2(diff)+" h")+"\nHoras complementarias declaradas: "+fmt2(complementary)+" h\nHoras de jornada irregular declaradas: "+fmt2(irregularDone)+" h\nReferencia irregular proporcional: "+fmt2(irregularProp)+" h\nDiferencia irregular orientativa: "+fmt2(irregularProp-irregularDone)+" h\nNo constituye una deuda o saldo laboral definitivo.";
-}
-["contract","start","end","logged","hasComplementary","complementary","hasIrregular","irregularDone"].forEach(id=>$(id).addEventListener("input",calc));
-$("copy").addEventListener("click",async()=>{if(!copyText)return;try{await navigator.clipboard.writeText(copyText);$("copy").textContent="Copiado";setTimeout(()=>$("copy").textContent="Copiar mi cálculo",1800)}catch{window.prompt("Copia el resultado:",copyText)}});
-$("print").addEventListener("click",()=>window.print());
-calc();
-</script>
-<script type="module">
-
-"use strict";
-const $=id=>document.getElementById(id);
-const mins=x=>{const m=/^(\d{1,2}):(\d{2})$/.exec(x.trim());return m?Number(m[1])*60+Number(m[2]):null};
-const norm=x=>x.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9 ]/g," ").replace(/\s+/g," ").trim();
-const iso=d=>d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");
-const add=(start,i)=>{const d=new Date(start.getTime()+86400000*i);return iso(d)};
-function startDate(file){
- const dates=[...file.matchAll(/(\d{1,2})[.\/-](\d{1,2})[.\/-](20\d{2})/g)];
- if(dates.length<1)return null;
- const [,day,mon,yr]=dates[0];const d=new Date(Date.UTC(+yr,+mon-1,+day));
- return d.getUTCFullYear()===+yr&&d.getUTCMonth()===+mon-1&&d.getUTCDate()===+day?d:null;
-}
-function matchesName(candidate,entered){
- const a=norm(candidate).split(" ").filter(Boolean),b=norm(entered).split(" ").filter(Boolean);
- return b.length>=2&&b.every(token=>a.includes(token))&&a.length>=b.length;
-}
-function timeHours(m){return (m/60).toLocaleString("es-ES",{maximumFractionDigits:2})+" h"}
-function td(tr,text){const cell=document.createElement("td");cell.textContent=text;tr.append(cell)}
-function parsePage(items,search,start,file){
- const lines=[];
- for(const obj of items){
-  const t=(obj.str||"").trim();if(!t)continue;
-  const x=obj.transform[4],y=obj.transform[5];let row=lines.find(a=>Math.abs(a.y-y)<2);
-  if(!row){row={y,parts:[]};lines.push(row)}row.parts.push({x,t});
- }
- const shifts=[],warn=[];
- const columns=[215,259,304,348,393,437,482,526,570,614,660,704,748,792];
- for(const row of lines){
-  row.parts.sort((a,b)=>a.x-b.x);
-  const name=row.parts.filter(c=>c.x<165).map(c=>c.t).join(" ");
-  if(!matchesName(name,search))continue;
-  for(let day=0;day<7;day++){
-   const values=[null,null],flags=[];
-   for(const cell of row.parts.filter(c=>c.x>=192)){
-    let nearest=0,dist=Infinity;
-    for(let k=0;k<14;k++){const delta=Math.abs(cell.x-columns[k]);if(delta<dist){dist=delta;nearest=k}}
-    if(dist>24||Math.floor(nearest/2)!==day)continue;
-    if(/^V$/i.test(cell.t))flags.push("V");
-    if(mins(cell.t)!==null)values[nearest%2]=cell.t;
-   }
-   if(values[0]&&values[1]){
-    const a=mins(values[0]),b=mins(values[1]);let duration=b-a;if(duration<0)duration+=1440;
-    if(duration<=0||duration>960){warn.push("Turno inusual en "+add(start,day)+" ("+file+")");continue}
-    shifts.push({date:add(start,day),in:values[0],out:values[1],duration,file});
-   }else if(values[0]||values[1])warn.push("Turno incompleto "+add(start,day)+" ("+file+")");
-  }
- }
- return {shifts,warn};
-}
-let last=[];
-$("run").addEventListener("click",async()=>{
- const files=[...$("files").files],name=$("name").value.trim(),year=Number($("year").value);
- if(!files.length||norm(name).split(" ").length<2||!Number.isInteger(year)){ $("status").textContent="Selecciona archivos, tu nombre y un año válido.";return;}
- $("run").disabled=true;$("results").hidden=true;$("status").textContent="Leyendo PDF localmente…";$("warnings").textContent="";
- try{
-  const pdfjs=await import("./vendor/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc="./vendor/pdf.worker.mjs";
-  const all=[],messages=[],seen=new Map();
-  for(let i=0;i<files.length;i++){
-   const file=files[i],start=startDate(file.name);
-   $("status").textContent="Procesando "+(i+1)+" de "+files.length+": "+file.name;
-   if(!start){messages.push("No encuentro la fecha inicial en el nombre de "+file.name+". Omítelo o renómbralo con una fecha DD.MM.AAAA.");continue}
-   try{
-    const bytes=await file.arrayBuffer(),doc=await pdfjs.getDocument({data:new Uint8Array(bytes)}).promise;
-    let shifts=[],warnings=[];
-    for(let p=1;p<=doc.numPages;p++){
-     const page=await doc.getPage(p);
-     const text=await page.getTextContent();
-     const part=parsePage(text.items,name,start,file.name);
-     shifts.push(...part.shifts);warnings.push(...part.warn);
-    }
-    messages.push(...warnings);
-    const key=iso(start),fingerprint=JSON.stringify(shifts.map(s=>[s.date,s.in,s.out]));
-    if(seen.has(key)){
-      if(seen.get(key)===fingerprint)messages.push("Rota duplicada omitida: "+file.name);
-      else messages.push("CONFLICTO: varias versiones de la semana "+key+". Se ha omitido "+file.name+"; revisa cuál es la correcta.");
-      continue;
-    }
-    seen.set(key,fingerprint);
-    if(!shifts.length)messages.push("No se han encontrado turnos para este nombre en "+file.name+".");
-    all.push(...shifts);
-   }catch(err){messages.push("No se pudo leer "+file.name+": "+String(err.message||err))}
-  }
-  const distinct=new Map();
-  for(const shift of all){if(!shift.date.startsWith(String(year)))continue;const id=shift.date;
-   if(distinct.has(id)){messages.push("Hay turnos repetidos o contradictorios el "+id+". Se conserva el primero; compruébalo.");continue}
-   distinct.set(id,shift);
-  }
-  last=[...distinct.values()].sort((a,b)=>a.date.localeCompare(b.date));
-  const rule=$("breakRule").value;
-  let gross=0,breaks=0;
-  $("shiftRows").replaceChildren();
-  for(const s of last){
-   const rest=rule!=="none"&&s.duration>=Number(rule)*60?30:0;s.rest=rest;
-   gross+=s.duration;breaks+=rest;
-   const tr=document.createElement("tr");
-   [s.date,s.in,s.out,timeHours(s.duration),timeHours(rest),timeHours(s.duration-rest),s.file].forEach(v=>td(tr,v));
-   $("shiftRows").append(tr);
-  }
-  $("gross").textContent=timeHours(gross);$("breaks").textContent=timeHours(breaks);$("net").textContent=timeHours(gross-breaks);
-  $("results").hidden=false;
-  $("status").textContent="Analizados "+files.length+" PDF. Encontrados "+last.length+" turnos únicos de "+year+".";
-  $("warnings").textContent=messages.join("\n");
- }catch(err){
-  $("status").textContent="No se pudo iniciar el lector local. Es posible que falte la biblioteca PDF alojada en GitHub.";
-  $("warnings").textContent=String(err.message||err);
- }finally{$("run").disabled=false}
-});
-$("clear").addEventListener("click",()=>{
- $("files").value="";$("name").value="";$("breakRule").value="none";$("status").textContent="";$("warnings").textContent="";$("results").hidden=true;$("shiftRows").replaceChildren();last=[];
-});
-$("applyPdf").addEventListener("click",()=>{
- if(!last.length){$("applyNote").textContent="No hay turnos para trasladar.";return}
- const net=last.reduce((sum,s)=>sum+s.duration-(s.rest||0),0)/60;
- const dates=last.map(s=>s.date).sort();
- const min=dates[0],max=dates[dates.length-1];
- const minYear=Number(min.slice(0,4)),maxYear=Number(max.slice(0,4));
- if(minYear!==2026||maxYear!==2026){$("applyNote").textContent="La calculadora manual está configurada para 2026; introduce un período de ese año.";return}
- document.getElementById("logged").value=net.toFixed(2);
- document.getElementById("logged").dispatchEvent(new Event("input",{bubbles:true}));
- $("applyNote").textContent="Se han trasladado "+net.toLocaleString("es-ES",{maximumFractionDigits:2})+" horas. IMPORTANTE: comprueba arriba que las fechas de inicio y fin coincidan con las rotas analizadas; si faltan semanas, el total no representa todo el período.";
- document.getElementById("title2").scrollIntoView({behavior:"smooth"});
-});
-$("csv").addEventListener("click",()=>{
- const rows=[["Fecha","Entrada","Salida","Presencia_minutos","Descanso_minutos","Trabajo_efectivo_minutos","Archivo"]];
- for(const s of last)rows.push([s.date,s.in,s.out,s.duration,s.rest||0,s.duration-(s.rest||0),s.file]);
- const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
- const url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
- const a=document.createElement("a");a.href=url;a.download="mis-horas-rotas-"+$("year").value+".csv";a.click();URL.revokeObjectURL(url);
-});
-
-</script>
+<footer><div class="wrap">CGT Primark Gran Vía · Cómputo orientativo</div></footer>
 </body></html>

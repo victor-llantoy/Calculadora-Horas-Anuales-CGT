@@ -1,0 +1,143 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { add } from '../js/calculator.mjs';
+const require = createRequire(import.meta.url);
+const { chromium, devices } = require('playwright');
+
+const types = { html: 'text/html', mjs: 'text/javascript', css: 'text/css' };
+const root = new URL('../', import.meta.url);
+const server = createServer(async (request, response) => {
+  const path = new URL(request.url, 'http://localhost').pathname.replace(/^\/Calculadora-Horas-Anuales-CGT\//, '');
+  try {
+    const file = path || 'index.html';
+    const body = await readFile(new URL(file, root));
+    response.writeHead(200, { 'Content-Type': types[file.split('.').at(-1)] ?? 'application/octet-stream' });
+    response.end(body);
+  } catch { response.writeHead(404); response.end(); }
+});
+
+function fixture(name, start, shift = '17:00', day = 0) {
+  const cell = (p, x, y) => 'BT /F1 10 Tf 1 0 0 1 ' + x + ' ' + y + ' Tm (' + p + ') Tj ET\n';
+  const columns = [215,259,304,348,393,437,482,526,570,614,660,704,748,792];
+  const format = date => date.split('-').reverse().join('/');
+  const stream = cell(format(start) + ' al ' + format(add(start, 6)), 22, 540) +
+    cell('Persona Sintetica', 20, 420) + cell('09:00', columns[day*2], 420) + cell(shift, columns[day*2+1], 420) +
+    cell('V', columns[((day+1)%7)*2], 420) + cell('EMPLEADO AJENO', 20, 390) +
+    cell('08:00', 215, 390) + cell('18:00',259,390);
+  const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', '<< /Length ' + stream.length + ' >>\nstream\n' + stream + 'endstream'];
+  let pdf = '%PDF-1.4\n';
+  const offsets = objects.map((object, i) => {
+    const offset = pdf.length;
+    pdf += (i+1) + ' 0 obj\n' + object + '\nendobj\n';
+    return offset;
+  });
+  const xref = pdf.length;
+  pdf += 'xref\n0 6\n0000000000 65535 f \n' + offsets.map(x => String(x).padStart(10,'0') + ' 00000 n \n').join('') +
+    'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n';
+  return { name, mimeType: 'application/pdf', buffer: Buffer.from(pdf) };
+}
+
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+let browser;
+try {
+  browser = await chromium.launch({ executablePath: process.env.CGT_CHROMIUM || undefined, args: ['--no-sandbox'] });
+  const context = await browser.newContext({ ...devices['Pixel 7'], acceptDownloads: true,
+    permissions: ['clipboard-read','clipboard-write'] });
+  const page = await context.newPage();
+  const requests = [], errors = [];
+  context.on('request', request => requests.push([request.method(), request.url(), request.postData()]));
+  page.on('pageerror', error => errors.push(error.message));
+  const origin = 'http://127.0.0.1:' + server.address().port;
+  await page.goto(origin + '/Calculadora-Horas-Anuales-CGT/');
+  await page.selectOption('#contract','4');
+  await page.fill('#start','2026-07-27');
+  await page.locator('#start').dispatchEvent('change');
+  await page.locator('[data-field=amount]').fill('483:05');
+  assert.match(await page.locator('#summary').innerText(), /483 h 05 min/);
+  assert.equal(await page.locator('#csv').isEnabled(), true);
+  await page.click('#copy');
+  await page.waitForFunction(() => document.querySelector('#exportStatus').textContent.includes('copiado'));
+  assert.match(await page.locator('#exportStatus').innerText(), /copiado/);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+
+  await page.selectOption('#mode','pdf');
+  async function analyze(files, status) {
+    await page.setInputFiles('#files', files);
+    await page.fill('#name','Persona Sintética');
+    await page.click('#run');
+    await page.waitForFunction(expected => document.querySelector('#pdfStatus').textContent.includes(expected), status, { timeout: 60000 });
+  }
+  const a = fixture('Week 01.pdf','2026-01-05');
+  await analyze([a], '1 turnos únicos');
+  await page.click('#apply');
+  assert.match(await page.locator('#notice').innerText(), /2026-01-05 a 2026-01-11.*parte del año/);
+  assert.match(await page.locator('#vacation').innerText(), /1 fechas/);
+  assert.match(await page.locator('#summary').innerText(), /8 h 00 min/);
+  await page.selectOption('#rule','360');
+  assert.match(await page.locator('#summary').innerText(), /7 h 30 min/);
+  await page.locator('#turns summary').click();
+  const rest = page.locator('#turns input').first();
+  await rest.fill('0');
+  await rest.dispatchEvent('change');
+  await page.selectOption('#hasComplementary','yes');
+  await page.fill('#complementary','1:00');
+  await page.fill('#included','1:00');
+  const summary = await page.locator('#summary').innerText();
+  assert.match(summary, /Ordinarias registradas\s*7 h 00 min/);
+  assert.match(summary, /Total con complementarias\s*8 h 00 min/);
+  async function download(button) {
+    const [file] = await Promise.all([page.waitForEvent('download'), page.click(button)]);
+    return readFile(await file.path(), 'utf8');
+  }
+  assert.match(await download('#csv'), /2026-01-06";"Vacaciones/);
+  assert.match(await download('#downloadPdf'), /^%PDF-1.4/);
+
+  await analyze([a, { ...a, name: 'copia.pdf' }, fixture('otra.pdf','2026-01-19')], '1 duplicados omitidos');
+  await page.click('#apply');
+  assert.match(await page.locator('#notice').innerText(), /2026-01-12/);
+  await analyze([a, fixture('revision.pdf','2026-01-05','16:00')], 'Resuelve los conflictos');
+  assert.equal(await page.locator('#apply').isEnabled(), false);
+  await page.locator('#versions select').selectOption('1');
+  await page.selectOption('#rule','0');
+  await page.click('#apply');
+  assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h 00 min/);
+
+  await analyze([fixture('cambio.pdf','2026-12-28','17:00',4)], '0 turnos únicos');
+  await page.fill('#year','2027');
+  await page.locator('#year').dispatchEvent('change');
+  await page.click('#apply');
+  assert.match(await page.locator('#notice').innerText(), /2027-01-01 a 2027-01-03.*solo permite/);
+  assert.match(await page.locator('#summary').innerText(), /8 h 00 min/);
+
+  await analyze([{ name:'ilegible.pdf', mimeType:'application/pdf', buffer: Buffer.from('No es un PDF') }], 'ninguna rota verificable');
+  assert.match(await page.locator('#warnings').innerText(), /PDF ilegible/);
+  assert.equal(await page.locator('#apply').isEnabled(), false);
+
+  const full = Array.from({length:53}, (_, i) => fixture('Week ' + (i%26 + 1) + '.pdf', add('2025-12-29', i*7), '17:00', i === 0 ? 3 : 0));
+  await page.fill('#year','2026');
+  await analyze(full, '53 turnos únicos');
+  await page.click('#apply');
+  assert.match(await page.locator('#notice').innerText(), /2026-01-01 a 2026-12-31/);
+  assert.doesNotMatch(await page.locator('#notice').innerText(), /sin cobertura|parte del año/);
+  assert.match(await page.locator('#summary').innerText(), /424 h 00 min/);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+  assert.doesNotMatch(await page.locator('body').innerText(), /PERSONA SINTETICA|EMPLEADO AJENO/i);
+  assert.ok(requests.every(([method, url, data]) => method === 'GET' && url.startsWith(origin + '/') && data === null), JSON.stringify(requests));
+  assert.deepEqual(errors, []);
+  await page.setInputFiles('#files', full);
+  await page.fill('#name','Persona Sintética');
+  await page.click('#run');
+  await page.click('#cancel');
+  await page.waitForFunction(() => document.querySelector('#pdfStatus').textContent.includes('cancelado'));
+  await page.click('#reset');
+  assert.equal(await page.locator('#turns').innerText(), '');
+  assert.equal(await page.locator('#csv').isEnabled(), false);
+  console.log('Prueba Chromium móvil: lectura, 53 rotas, conflictos, duplicados, vacaciones, descanso, cambio de año, exportaciones y tráfico verificados.');
+} finally {
+  await browser?.close();
+  server.close();
+}
