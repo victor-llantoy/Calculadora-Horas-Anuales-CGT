@@ -1,6 +1,6 @@
 import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=fin-de-semana-2026';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=horas-y-descansos';
-import { readRotas } from './pdf-reader.mjs?v=horas-y-descansos';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=lector-2026';
+import { readRotas } from './pdf-reader.mjs?v=lector-2026';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);

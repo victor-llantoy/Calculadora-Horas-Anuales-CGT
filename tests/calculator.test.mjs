@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { contracts, date, duration, decimalHours, rotaRest, reference, totals, compare, missingWeeks } from '../js/calculator.mjs';
-import { startDate, parsePage, groupVersions, selectRecords } from '../js/rota-parser.mjs';
+import { startDate, parsePage, scheduleColumns, groupVersions, selectRecords } from '../js/rota-parser.mjs';
 import { buildPdf } from '../js/reports.mjs';
 
 test('referencias originales, fechas inclusivas y redondeo en minutos', () => {
@@ -72,4 +72,25 @@ test('horas decimales y límites del descanso de las rotas', () => {
   assert.equal(rotaRest(32, 360), 0);
   assert.equal(rotaRest(32, 390), 30);
   assert.equal(510 - rotaRest(39.4, 510), 480);
+});
+
+test('columnas de una rota con el lunes sin turnos y año incorrecto en el nombre', () => {
+  const labels = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO']
+    .flatMap(day => [day + ' IN', day + ' OUT']);
+  const headers = labels.map((label, i) => cell(label, 158 + 47.5 * i, 500));
+  const items = [cell('Persona Sintética', 52), cell('16:00', 268), cell('21:00', 316)];
+  const start = startDate('06.01.2024 - 12.01.2024.pdf', [[cell('HORARIO DEL 06/01/2025 - 12/01/2025', 25, 520)]]);
+  assert.equal(start, '2025-01-06');
+  assert.deepEqual(parsePage(items, 'Persona Sintética', start, scheduleColumns([...headers, ...items])).records,
+    [{ date: '2025-01-07', kind: 'shift', in: 960, out: 1260, presence: 300 }]);
+});
+
+test('formato 2026 con planta, fechas compactas y cabecera con al', () => {
+  const start = startDate('WEEK 26 - 09032026 AL 15032026.pdf', [
+    [cell('HORARIO DEL 09/03/2026 AL 15/03/2026', 25, 520)],
+  ]);
+  assert.equal(start, '2026-03-09');
+  const row = parsePage([cell('12345678 Persona Sintética Planta 4', 50), cell('16:00', 215), cell('21:00', 259)],
+    'Persona Sintética', start);
+  assert.equal(row.records[0].presence, 300);
 });

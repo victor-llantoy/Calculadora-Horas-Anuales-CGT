@@ -1,5 +1,5 @@
 import { formatDate } from './calculator.mjs?v=horas-y-descansos';
-import { parsePage, startDate } from './rota-parser.mjs?v=horas-y-descansos';
+import { parsePage, startDate, filenameStart, scheduleColumns } from './rota-parser.mjs?v=lector-2026';
 
 export async function readRotas(files, name, signal, progress) {
   const pdf = await import('../vendor/pdf.mjs');
@@ -27,7 +27,12 @@ export async function readRotas(files, name, signal, progress) {
       }
       const start = startDate(file.name, pages);
       if (!start) { warnings.push('Documento ' + number + ': fecha semanal ausente o contradictoria.'); continue; }
-      const parsed = pages.map(page => parsePage(page, name, start));
+      const namedStart = filenameStart(file.name);
+      if (namedStart && namedStart !== start) {
+        warnings.push('Documento ' + number + ': la fecha del archivo no coincide con la cabecera. Se usa la semana del ' + formatDate(start) + '.');
+      }
+      const documentLayout = scheduleColumns(pages.flat());
+      const parsed = pages.map(page => parsePage(page, name, start, documentLayout));
       const matching = parsed.filter(result => result.matched);
       if (matching.length !== 1 || parsed.some(result => result.ambiguous)) {
         warnings.push('Documento ' + number + ': no se encontró una fila personal inequívoca.');
