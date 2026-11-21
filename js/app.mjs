@@ -1,6 +1,6 @@
-import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=5379d35';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=5379d35';
-import { readRotas } from './pdf-reader.mjs?v=5379d35';
+import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=horas-2026';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=horas-2026';
+import { readRotas } from './pdf-reader.mjs?v=horas-2026';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);
@@ -422,20 +422,21 @@ $('csv').addEventListener('click', () => {
   if (!report) return;
   const { entries, records, label, notices, pdf, net, mode } = report;
   const weekly = new Map();
+  const csvHours = minutes => (minutes / 60).toLocaleString('es-ES', { useGrouping: false, maximumFractionDigits: 6 });
   if (pdf || mode === 'weekly') for (const row of records) {
     const start = week(row.date);
     if (!weekly.has(start)) weekly.set(start, []);
     weekly.get(start).push(row);
   }
   exportCsv([['CGT Primark Gran Vía', label], ...notices.map(note => [note]), ...entries, [],
-    ['Semana','Días trabajados','Vacaciones V','Presencia min','Descanso min','Efectivo min'],
+    ['Semana','Días trabajados','Vacaciones V','Presencia (h)','Descanso (h)','Efectivo (h)'],
     ...[...weekly].sort().map(([day, rows]) => {
       const sum = totals(rows);
-      return [formatDate(day), pdf ? rows.length - sum.vacation : '', pdf ? sum.vacation : '', net ? '' : sum.presence, net ? '' : sum.rest, sum.effective];
-    }), [], ['Fecha','Tipo','Entrada','Salida','Presencia min','Descanso min','Efectivo min'],
+      return [formatDate(day), pdf ? rows.length - sum.vacation : '', pdf ? sum.vacation : '', net ? '' : csvHours(sum.presence), net ? '' : csvHours(sum.rest), csvHours(sum.effective)];
+    }), [], ['Fecha','Tipo','Entrada','Salida','Presencia (h)','Descanso (h)','Efectivo (h)'],
     ...records.map(row => row.kind === 'vacation' ? [formatDate(row.date),'Vacaciones (V)'] :
       [formatDate(row.date),row.kind === 'shift' ? 'Turno' : 'Registro manual', row.in == null ? '' : clock(row.in),
-        row.out == null ? '' : clock(row.out), net ? '' : row.presence, net ? '' : row.rest, row.presence - row.rest])]);
+        row.out == null ? '' : clock(row.out), net ? '' : csvHours(row.presence), net ? '' : csvHours(row.rest), csvHours(row.presence - row.rest)])]);
 });
 $('downloadPdf').addEventListener('click', () => {
   if (!report) return;

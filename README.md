@@ -12,7 +12,7 @@ Herramienta de CGT Primark Gran Vía (Madrid). La misma página incluye el regis
 
 ## Criterios de cálculo
 
-- Se usan minutos enteros. La referencia proporcional redondea al minuto tras aplicar la regla de tres por días naturales inclusivos. Para 158 días y 1.116 horas anuales, el cálculo equivale a 483,09 h decimales, o 483 h 05 min al minuto más próximo.
+- Se usan minutos enteros. La referencia proporcional redondea al minuto tras aplicar la regla de tres por días naturales inclusivos. Para 158 días y 1.116 horas anuales, el cálculo equivale a 483,09 h decimales, y se muestra como 483,08 h tras redondear al minuto.
 - Los valores de las doce opciones de la tabla de CGT para 2026 se conservan. El [art. 20 modificado del convenio](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-26529) fija 1.765 h de jornada máxima anual efectiva para 2026. La tabla usa la etiqueta de 39,5 h. La denominación habitual de 40 h no añade otra fila de referencia.
 - Conviene cotejar con la tabla original y el calendario del centro las 877 h de la fila de 16 h, que superan las 803 h de la fila de 18 h, y la fila de 32 h, que indica 5 × 6,5 h y 179 días. La columna irregular reproduce las horas de referencia, con sus redondeos. La app no infiere correcciones de esas filas ni extrapola la referencia a otros años.
 - Las rotas indican horas planificadas. Se registra la presencia y se deduce el descanso que el usuario haya confirmado. La regla general de 30 minutos es opcional y se puede corregir por turno. Un turno nocturno queda asociado a la fecha de inicio que figura en la rota.

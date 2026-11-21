@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
 <link rel="stylesheet" href="css/styles.css">
-<script type="module" src="js/app.mjs?v=5379d35"></script>
+<script type="module" src="js/app.mjs?v=horas-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -68,7 +68,7 @@
 <section class="panel" id="resultados">
 <h2>Mis resultados</h2>
 <p id="notice" role="status"></p>
-<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.116 × 158 ÷ 365 = 483,09 h decimales, que se muestran como 483 h 05 min.</p></details>
+<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.116 × 158 ÷ 365 = 483,09 h antes del redondeo al minuto. El resultado mostrado tras ese redondeo es 483,08 h.</p></details>
 <dl id="summary" class="metrics"></dl>
 <h3>Vacaciones</h3>
 <p id="vacation"></p>

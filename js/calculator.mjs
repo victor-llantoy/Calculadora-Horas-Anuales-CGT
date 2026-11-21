@@ -25,11 +25,9 @@ export function duration(value) {
   const match = /^(\d{1,5}):([0-5]\d)$/.exec(value.trim());
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 }
+const hoursDisplay = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2, useGrouping: 'always' });
 export function format(value) {
-  if (value == null) return '—';
-  const absolute = Math.abs(value);
-  return (value < 0 ? '−' : '') + Math.floor(absolute / 60).toLocaleString('es-ES') +
-    ' h ' + String(absolute % 60).padStart(2, '0') + ' min';
+  return value == null ? '—' : hoursDisplay.format(value / 60) + ' h';
 }
 export function reference(contract, start, end) {
   const days = (date(end) - date(start)) / DAY + 1;

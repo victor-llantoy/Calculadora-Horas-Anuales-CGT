@@ -55,11 +55,12 @@ try {
   await page.goto(origin + '/Calculadora-Horas-Anuales-CGT/');
   assert.doesNotMatch(await page.locator('body').innerText(), /cartel/i);
   assert.doesNotMatch(await page.locator('#contract').textContent(), /cartel/i);
+  assert.match(await page.locator('#contractDetails').innerText(), /1\.765 h/);
   await page.selectOption('#contract','4');
   await page.fill('#start','2026-07-27');
   await page.locator('#start').dispatchEvent('change');
   await page.locator('[data-field=amount]').fill('483:05');
-  assert.match(await page.locator('#summary').innerText(), /483 h 05 min/);
+  assert.match(await page.locator('#summary').innerText(), /483,08 h/);
   assert.equal(await page.locator('#csv').isEnabled(), true);
   await page.click('#copy');
   await page.waitForFunction(() => document.querySelector('#exportStatus').textContent.includes('copiado'));
@@ -78,9 +79,9 @@ try {
   await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /05\/01\/2026 a 11\/01\/2026.*parte del año/);
   assert.match(await page.locator('#vacation').innerText(), /1 fechas/);
-  assert.match(await page.locator('#summary').innerText(), /8 h 00 min/);
+  assert.match(await page.locator('#summary').innerText(), /8 h/);
   await page.selectOption('#rule','360');
-  assert.match(await page.locator('#summary').innerText(), /7 h 30 min/);
+  assert.match(await page.locator('#summary').innerText(), /7,5 h/);
   await page.locator('#turns summary').click();
   const rest = page.locator('#turns input').first();
   await rest.fill('0');
@@ -89,8 +90,8 @@ try {
   await page.fill('#complementary','1:00');
   await page.fill('#included','1:00');
   const summary = await page.locator('#summary').innerText();
-  assert.match(summary, /Ordinarias registradas\s*7 h 00 min/);
-  assert.match(summary, /Total con complementarias\s*8 h 00 min/);
+  assert.match(summary, /Ordinarias registradas\s*7 h/);
+  assert.match(summary, /Total con complementarias\s*8 h/);
   async function download(button) {
     const [file] = await Promise.all([page.waitForEvent('download'), page.click(button)]);
     return readFile(await file.path(), 'utf8');
@@ -106,14 +107,14 @@ try {
   await page.locator('#versions select').selectOption('1');
   await page.selectOption('#rule','0');
   await page.click('#apply');
-  assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h 00 min/);
+  assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h/);
 
   await analyze([fixture('cambio.pdf','2026-12-28','17:00',4)], '0 turnos únicos');
   await page.fill('#year','2027');
   await page.locator('#year').dispatchEvent('change');
   await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /01\/01\/2027 a 03\/01\/2027.*solo permite/);
-  assert.match(await page.locator('#summary').innerText(), /8 h 00 min/);
+  assert.match(await page.locator('#summary').innerText(), /8 h/);
 
   await analyze([{ name:'ilegible.pdf', mimeType:'application/pdf', buffer: Buffer.from('No es un PDF') }], 'ninguna rota verificable');
   assert.match(await page.locator('#warnings').innerText(), /PDF ilegible/);
@@ -125,7 +126,7 @@ try {
   await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /01\/01\/2026 a 31\/12\/2026/);
   assert.doesNotMatch(await page.locator('#notice').innerText(), /sin cobertura|parte del año/);
-  assert.match(await page.locator('#summary').innerText(), /424 h 00 min/);
+  assert.match(await page.locator('#summary').innerText(), /424 h/);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   assert.doesNotMatch(await page.locator('body').innerText(), /PERSONA SINTETICA|EMPLEADO AJENO/i);
   assert.ok(requests.every(([method, url, data]) => method === 'GET' && url.startsWith(origin + '/') && data === null), JSON.stringify(requests));
