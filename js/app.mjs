@@ -122,7 +122,10 @@ function recalculate() {
   const extension = getExtension(contract);
   $('extensionFields').hidden = !hasExtension;
   const manualExtension = hasExtension && value('extensionMethod') === 'hours';
-  const extensionHours = manualExtension ? decimalHours(value('extensionHours')) : 0;
+  const extensionHoursText = value('extensionHours').trim();
+  const extensionHours = manualExtension && extensionHoursText ? decimalHours(extensionHoursText) : 0;
+  const extensionWorkedText = value('extensionWorked').trim();
+  const extensionWorked = hasExtension && extensionWorkedText ? decimalHours(extensionWorkedText) : 0;
   $('extensionHoursFields').hidden = !manualExtension;
   $('extensionDatesFields').hidden = !hasExtension || manualExtension;
   metrics('contractDetails', [['Horas anuales', format(annual * 60)], ['Distribución irregular anual', format(irregular * 60)],
@@ -145,7 +148,9 @@ function recalculate() {
   const end = pdf ? selected.end : value('end');
   if (!Number.isFinite(date(start)) || !Number.isFinite(date(end)) || start > end) return say('notice', 'Indica un período válido con el final igual o posterior al inicio.');
   const period = start + '/' + end + '/' + value('mode');
-  if (manualExtension && !(extensionHours > 0)) return say('notice', 'Indica cuántas horas de ampliación corresponden al período, por ejemplo 5 o 2,5.');
+  if (extensionWorked === null || extensionHours === null) return say('notice', 'Introduce las horas de ampliación como número, por ejemplo 5 o 2,5.');
+  if (manualExtension && !extensionHours && !extensionWorked) return say('notice', 'Indica las horas de ampliación acordadas o las realizadas que faltan en tu registro.');
+  const unknownExtensionReference = manualExtension && !extensionHours;
   if (hasExtension && !manualExtension && !extension) return say('notice', 'Elige una jornada superior a la habitual e indica el primero y el último día de la ampliación en 2026.');
   const expected = reference(contract, start, end, extension);
   if (expected && manualExtension) expected.ordinary += extensionHours;
@@ -157,12 +162,15 @@ function recalculate() {
   const summary = totals(data.records);
   const available = pdf || data.records.length > 0;
   const supplementary = hasComplementary ? decimalHours(value('complementary')) : 0;
-  const included = hasComplementary ? decimalHours(value('included')) : 0;
+  const included = hasComplementary && value('included').trim() ? decimalHours(value('included')) : 0;
   const irregularUsed = hasIrregular ? decimalHours(value('irregular')) : 0;
   const stale = (hasComplementary || hasIrregular) && adjustmentPeriod !== null && adjustmentPeriod !== period;
-  const comparison = available && !stale ? compare(summary.effective, supplementary, included, expected?.ordinary) : null;
+  const comparison = available && !stale && included <= summary.effective
+    ? compare(summary.effective + extensionWorked, supplementary, included, unknownExtensionReference ? null : expected?.ordinary)
+    : null;
   const notices = [formatDate(start) + ' a ' + formatDate(end) + '.'];
-  if (manualExtension) notices.push('Ampliación declarada para el período: ' + format(extensionHours) + '.');
+  if (manualExtension && extensionHours) notices.push('Ampliación acordada para el período: ' + format(extensionHours) + '.');
+  if (unknownExtensionReference) notices.push('Indica las horas de ampliación acordadas para calcular la diferencia con la referencia ajustada.');
   if (extension) notices.push('Ampliación a ' + extension.contract[0] + ', del ' +
     formatDate(extension.start) + ' al ' + formatDate(extension.end) + '.');
   if (!expected) notices.push('La referencia disponible solo permite comparar períodos íntegramente de 2026.');
@@ -182,13 +190,14 @@ function recalculate() {
   say('vacation', pdf ? summary.vacation + ' fechas con marca V dentro de las rotas seleccionadas.' : 'Las vacaciones se identifican al leer rotas PDF.');
   const entries = [
     ['Referencia anual 2026', format(annualExpected?.ordinary ?? (start === '2026-01-01' && end === '2026-12-31' ? expected?.ordinary : null) ?? annual * 60)],
-    ...(manualExtension ? [['Horas de ampliación declaradas', format(extensionHours)]] : []),
+    ...(manualExtension && extensionHours ? [['Horas de ampliación acordadas', format(extensionHours)]] : []),
     ['Referencia proporcional', format(expected?.ordinary)],
     ['Presencia', format(available && !data.net ? summary.presence : null)],
     ['Días trabajados identificados', pdf ? data.records.length - summary.vacation : '—'],
     ['Vacaciones identificadas (V)', pdf ? summary.vacation : '—'],
     ['Descansos descontados', format(available && !data.net ? summary.rest : null)],
     ['Trabajo efectivo registrado', format(available ? summary.effective : null)],
+    ...(hasExtension ? [['Horas de ampliación realizadas añadidas', format(extensionWorked)]] : []),
     ['Ordinarias registradas', format(comparison?.ordinary)],
     ['Complementarias declaradas', format(stale ? null : supplementary)],
     ['Complementarias ya incluidas', format(stale ? null : included)],
@@ -419,7 +428,7 @@ for (const id of ['start','end']) $(id).addEventListener('change', () => {
 $('entryMode').addEventListener('change', () => { clearEntries(); resetAdjustments(); recalculate(); });
 $('addEntry').addEventListener('click', addEntry);
 $('entries').addEventListener('input', recalculate);
-for (const id of ['contract','hasExtension','extensionMethod','extensionHours','extendedContract','extensionStart','extensionEnd']) {
+for (const id of ['contract','hasExtension','extensionMethod','extensionHours','extensionWorked','extendedContract','extensionStart','extensionEnd']) {
   $(id).addEventListener('input', () => value('mode') === 'pdf' ? updatePdf() : recalculate());
 }
 for (const id of ['hasComplementary','hasIrregular','complementary','included','irregular']) {
@@ -438,7 +447,7 @@ $('reset').addEventListener('click', () => {
   $('year').value = '2026'; $('entryMode').value = 'total';
   $('hasExtension').value = 'no';
   $('extensionMethod').value = 'hours';
-  $('extensionHours').value = '';
+  $('extensionHours').value = $('extensionWorked').value = '';
   $('extendedContract').value = $('extensionStart').value = $('extensionEnd').value = '';
   manualPeriod = value('start') + '/' + value('end');
   clearEntries();

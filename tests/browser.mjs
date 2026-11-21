@@ -105,6 +105,16 @@ try {
   const summary = await page.locator('#summary').innerText();
   assert.match(summary, /Ordinarias registradas\s*7 h/);
   assert.match(summary, /Total con complementarias\s*8 h/);
+  await page.fill('#included', '');
+  assert.match(await page.locator('#summary').innerText(), /Total con complementarias\s*9 h/);
+  await page.selectOption('#hasExtension', 'yes');
+  await page.selectOption('#extensionMethod', 'hours');
+  await page.fill('#extensionHours', '');
+  await page.fill('#extensionWorked', '2');
+  assert.match(await page.locator('#summary').innerText(), /Ordinarias registradas\s*10 h/);
+  assert.match(await page.locator('#summary').innerText(), /Total con complementarias\s*11 h/);
+  assert.match(await page.locator('#notice').innerText(), /Indica las horas de ampliación acordadas/);
+  await page.selectOption('#hasExtension', 'no');
   async function download(button) {
     const [file] = await Promise.all([page.waitForEvent('download'), page.click(button)]);
     return readFile(await file.path(), 'utf8');

@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
 <link rel="stylesheet" href="css/styles.css?v=horas-y-descansos">
-<script type="module" src="js/app.mjs?v=ampliacion-manual-2026"></script>
+<script type="module" src="js/app.mjs?v=horas-del-documento-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -28,9 +28,9 @@
   <label for="extensionMethod">Cómo indicar la ampliación</label>
   <select id="extensionMethod"><option value="hours">Escribir el total de horas</option><option value="dates">Elegir jornada y fechas</option></select>
   <div id="extensionHoursFields">
-    <label for="extensionHours">¿Cuántas horas de ampliación tienes en este período?</label>
+    <label for="extensionHours">Horas de ampliación acordadas en este período (si las conoces)</label>
     <input id="extensionHours" inputmode="decimal" placeholder="Por ejemplo, 5" autocomplete="off" aria-describedby="extensionHoursNote">
-    <p class="note" id="extensionHoursNote">Escribe el total de horas acordadas de ampliación dentro del período que estás revisando. Se añaden a la referencia del período.</p>
+    <p class="note" id="extensionHoursNote">Las horas acordadas ajustan la referencia del período.</p>
   </div>
   <div id="extensionDatesFields" hidden>
   <div class="grid">
@@ -40,6 +40,9 @@
   </div>
   <p class="note">Introduce las fechas efectivas de la ampliación en 2026. Si sigue vigente al terminar el año, usa el 31/12/2026. La referencia se estima por días naturales de cada jornada.</p>
   </div>
+  <label for="extensionWorked">Horas de ampliación realizadas que faltan en la rota o en tu total manual</label>
+  <input id="extensionWorked" inputmode="decimal" placeholder="0" autocomplete="off" aria-describedby="extensionWorkedNote">
+  <p class="note" id="extensionWorkedNote">Si aparecen en el documento que te entregaron, anota aquí solo las que faltan en tu registro. Se suman a las horas ordinarias.</p>
 </div>
 <details id="tabla-jornadas">
 <summary>Ver tabla de jornadas 2026</summary>
@@ -88,7 +91,7 @@
 <p class="note">Indica solo las horas del período seleccionado. La distribución irregular forma parte de la jornada ordinaria.</p>
 <div class="grid">
 <div><label for="hasComplementary">¿Has realizado horas complementarias?</label><select id="hasComplementary"><option value="no">No</option><option value="yes">Sí</option></select></div>
-<div id="complementaryFields" hidden><label for="complementary">Complementarias realizadas</label><input id="complementary" placeholder="0" inputmode="decimal" autocomplete="off"><label for="included">De ellas, horas ya incluidas en el total anterior</label><input id="included" placeholder="0" inputmode="decimal" autocomplete="off"></div>
+<div id="complementaryFields" hidden><label for="complementary">Horas complementarias realizadas</label><input id="complementary" placeholder="0" inputmode="decimal" autocomplete="off"><label for="included">De ellas, horas que ya figuran en la rota o en tu total manual</label><input id="included" placeholder="0" inputmode="decimal" autocomplete="off"><p class="note">Si las complementarias solo figuran en el documento que te entregaron, deja el segundo campo vacío. Se añadirán todas al total.</p></div>
 <div><label for="hasIrregular">¿Te han aplicado distribución irregular de jornada?</label><select id="hasIrregular"><option value="no">No</option><option value="yes">Sí</option></select></div>
 <div id="irregularFields" hidden><label for="irregular">Horas de distribución irregular</label><input id="irregular" placeholder="0" inputmode="decimal" autocomplete="off"></div>
 </div>
