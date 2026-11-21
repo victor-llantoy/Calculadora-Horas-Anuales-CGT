@@ -7,8 +7,8 @@ export const contracts = [
   ["25 h · 5 días/semana", 1120, 56, 224, 5, 5],
   ["24 h · 4 días/semana", 1075, 54, 179, 4, 6],
   ["20 h · 5 días/semana", 896, 45, 224, 5, 4],
-  ["18 h · 3 días/semana", 806, 40, 134, 3, 6],
-  ["16 h · 2 días/semana", 880, 44, 110, 2, 8],
+  ["18 h · viernes a domingo", 806, 40, 134, 3, 6],
+  ["16 h · sábado y domingo", 880, 44, 110, 2, 8],
   ["12 h · 2 días/semana", 538, 27, 90, 2, 6],
 ];
 export const formatDate = day => day.split('-').reverse().join('/');
