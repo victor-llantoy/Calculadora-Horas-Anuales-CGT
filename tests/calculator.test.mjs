@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contracts, date, duration, reference, totals, compare, missingWeeks } from '../js/calculator.mjs';
+import { contracts, date, duration, decimalHours, rotaRest, reference, totals, compare, missingWeeks } from '../js/calculator.mjs';
 import { startDate, parsePage, groupVersions, selectRecords } from '../js/rota-parser.mjs';
 import { buildPdf } from '../js/reports.mjs';
 
@@ -61,4 +61,15 @@ test('PDF paginado, referencias cruzadas y caracteres escapados', () => {
   const offset = Number(/startxref\n(\d+)/.exec(pdf)[1]);
   assert.equal(pdf.slice(offset, offset + 4), 'xref');
   assert.ok(pdf.includes('V\\355a \\050Madrid\\051'));
+});
+
+test('horas decimales y límites del descanso de las rotas', () => {
+  assert.equal(decimalHours('8'), 480);
+  assert.equal(decimalHours('8,5'), 510);
+  assert.equal(decimalHours('8.5'), 510);
+  assert.equal(decimalHours('8:30'), null);
+  assert.equal(rotaRest(30, 510), 0);
+  assert.equal(rotaRest(32, 360), 0);
+  assert.equal(rotaRest(32, 390), 30);
+  assert.equal(510 - rotaRest(39.4, 510), 480);
 });

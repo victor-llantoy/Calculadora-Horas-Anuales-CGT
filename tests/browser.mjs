@@ -63,7 +63,7 @@ try {
   assert.match(await page.locator('#contractDetails').innerText(), /1\.120 h/);
   await page.fill('#start','2026-07-27');
   await page.locator('#start').dispatchEvent('change');
-  await page.locator('[data-field=amount]').fill('484:49');
+  await page.locator('[data-field=amount]').fill('484,82');
   assert.match(await page.locator('#summary').innerText(), /484,82 h/);
   assert.equal(await page.locator('#csv').isEnabled(), true);
   await page.click('#copy');
@@ -84,15 +84,15 @@ try {
   assert.match(await page.locator('#notice').innerText(), /05\/01\/2026 a 11\/01\/2026.*parte del año/);
   assert.match(await page.locator('#vacation').innerText(), /1 fechas/);
   assert.match(await page.locator('#summary').innerText(), /8 h/);
-  await page.selectOption('#rule','360');
+  await page.selectOption('#contract',{ label: '39,4 h · 5 días/semana' });
   assert.match(await page.locator('#summary').innerText(), /7,5 h/);
   await page.locator('#turns summary').click();
   const rest = page.locator('#turns input').first();
   await rest.fill('0');
   await rest.dispatchEvent('change');
   await page.selectOption('#hasComplementary','yes');
-  await page.fill('#complementary','1:00');
-  await page.fill('#included','1:00');
+  await page.fill('#complementary','1');
+  await page.fill('#included','1');
   const summary = await page.locator('#summary').innerText();
   assert.match(summary, /Ordinarias registradas\s*7 h/);
   assert.match(summary, /Total con complementarias\s*8 h/);
@@ -109,7 +109,7 @@ try {
   await analyze([a, fixture('revision.pdf','2026-01-05','16:00')], 'Resuelve los conflictos');
   assert.equal(await page.locator('#apply').isEnabled(), false);
   await page.locator('#versions select').selectOption('1');
-  await page.selectOption('#rule','0');
+  await page.selectOption('#contract',{ label: '30 h · 5 días/semana' });
   await page.click('#apply');
   assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h/);
 

@@ -1,6 +1,6 @@
-import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=jornadas-2026-v2';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=jornadas-2026-v2';
-import { readRotas } from './pdf-reader.mjs?v=jornadas-2026-v2';
+import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=horas-y-descansos';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=horas-y-descansos';
+import { readRotas } from './pdf-reader.mjs?v=horas-y-descansos';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);
@@ -34,8 +34,7 @@ function addEntry() {
   const id = ++entryId;
   const fields = [
     ['date', 'Inicio de semana o mes', 'date'],
-    ['amount', 'Horas registradas (horas:minutos)', 'text'],
-    ['rest', 'Descanso no computable (horas:minutos)', 'text']
+    ['amount', 'Horas registradas', 'text']
   ];
   for (const [key, label, type] of fields) {
     const field = node('div', null, entry);
@@ -45,7 +44,10 @@ function addEntry() {
     input.type = type;
     input.autocomplete = 'off';
     input.dataset.field = key;
-    if (type === 'text') input.placeholder = '0:00';
+    if (type === 'text') {
+      input.placeholder = '0';
+      input.inputMode = 'decimal';
+    }
   }
   const remove = node('button', 'Quitar período', entry);
   remove.type = 'button';
@@ -61,7 +63,6 @@ function syncEntries() {
   const total = value('entryMode') === 'total';
   for (const entry of $('entries').children) {
     entry.querySelector('[data-field=date]').parentElement.hidden = total;
-    entry.querySelector('[data-field=rest]').parentElement.hidden = value('manualKind') === 'net';
     entry.querySelector('button').hidden = total;
   }
   $('addEntry').hidden = total;
@@ -71,13 +72,13 @@ function clearEntries() {
   addEntry();
 }
 function manualInput(start, end) {
-  const mode = value('entryMode'), net = value('manualKind') === 'net';
+  const mode = value('entryMode');
   const records = [], seen = new Set();
   for (const entry of $('entries').children) {
     const fields = Object.fromEntries([...entry.querySelectorAll('input')].map(input => [input.dataset.field, input.value]));
     if (!Object.values(fields).some(Boolean)) continue;
-    const amount = duration(fields.amount), rest = net ? 0 : duration(fields.rest);
-    if (amount == null || rest == null || rest > amount) throw Error('Revisa horas y descansos. Usa horas:minutos y un descanso igual o menor que la presencia.');
+    const amount = decimalHours(fields.amount);
+    if (amount == null) throw Error('Introduce las horas como número, por ejemplo 37,5.');
     const day = mode === 'total' ? start : fields.date;
     if (!Number.isFinite(date(day))) throw Error('Indica una fecha válida para cada registro.');
     const monthly = mode === 'monthly';
@@ -87,7 +88,7 @@ function manualInput(start, end) {
     if (day > end || bucketEnd < start) throw Error('Hay un registro fuera del período seleccionado.');
     if (seen.has(day)) throw Error('Hay dos registros para la misma fecha de inicio.');
     seen.add(day);
-    records.push({ date: day, kind: 'manual', presence: amount, rest });
+    records.push({ date: day, kind: 'manual', presence: amount, rest: 0 });
   }
   const covered = new Set();
   if (mode === 'weekly') for (const record of records) covered.add(record.date);
@@ -98,7 +99,7 @@ function manualInput(start, end) {
       month = new Date(Date.UTC(+month.slice(0,4), +month.slice(5,7), 1)).toISOString().slice(0,10);
     }
   }
-  return { records, net, holes, mode };
+  return { records, net: true, holes, mode };
 }
 
 function recalculate() {
@@ -131,9 +132,9 @@ function recalculate() {
 
   const summary = totals(data.records);
   const available = pdf || data.records.length > 0;
-  const supplementary = hasComplementary ? duration(value('complementary')) : 0;
-  const included = hasComplementary ? duration(value('included')) : 0;
-  const irregularUsed = hasIrregular ? duration(value('irregular')) : 0;
+  const supplementary = hasComplementary ? decimalHours(value('complementary')) : 0;
+  const included = hasComplementary ? decimalHours(value('included')) : 0;
+  const irregularUsed = hasIrregular ? decimalHours(value('irregular')) : 0;
   const stale = (hasComplementary || hasIrregular) && adjustmentPeriod !== null && adjustmentPeriod !== period;
   const comparison = available && !stale ? compare(summary.effective, supplementary, included, expected?.ordinary) : null;
   const notices = [formatDate(start) + ' a ' + formatDate(end) + '.'];
@@ -141,7 +142,7 @@ function recalculate() {
   if (!available) notices.push('Introduce las horas del período para obtener la comparación.');
   if (stale) notices.push('Revisa y vuelve a introducir las horas complementarias e irregulares para este período.');
   if (available && !comparison && !stale) notices.push('Revisa las complementarias: indica ambas cantidades, y las ya incluidas no pueden superar las declaradas ni el total efectivo.');
-  if (irregularUsed == null) notices.push('Indica las horas de distribución irregular en formato horas:minutos.');
+  if (irregularUsed == null) notices.push('Indica las horas de distribución irregular en horas, por ejemplo 2,5.');
   if (!pdf && data.mode !== 'total') notices.push('En la primera y última semana o mes, registra solo las horas comprendidas entre las fechas indicadas.');
   if (data.holes.length) notices.push('Períodos sin cobertura completa: ' + data.holes.map(formatDate).join(', ') + '.');
   if (pdf) {
@@ -230,10 +231,10 @@ function updatePdf(renderTurns = true) {
   const year = Number(value('year'));
   const { records, coverage, conflicts } = selectRecords(groups, choices);
   const withinYear = day => day.startsWith(String(year));
+  const weeklyHours = Number.parseFloat(contracts[Number(value('contract'))][0].replace(',', '.'));
   const yearRecords = records.filter(row => withinYear(row.date)).map(row => {
     if (row.kind !== 'shift') return row;
-    const threshold = Number(value('rule'));
-    return { ...row, rest: rests.get(recordKey(row)) ?? (threshold && row.presence >= Math.max(30, threshold) ? 30 : 0) };
+    return { ...row, rest: rests.get(recordKey(row)) ?? rotaRest(weeklyHours, row.presence) };
   });
   // Incomplete weeks can still be reviewed, but they do not count as coverage.
   const observed = [...groups.keys()].flatMap(day => Array.from({ length: 7 }, (_, i) => add(day, i))).filter(withinYear).sort();
@@ -272,19 +273,19 @@ function showTurns(records) {
       lastWeek = currentWeek;
     }
     if (row.kind === 'vacation') { node('p', formatDate(row.date) + ' · Vacaciones (V)', group); continue; }
-    const label = node('label', formatDate(row.date) + ' · ' + clock(row.in) + '–' + clock(row.out) + ' · descanso (min)', group);
+    const label = node('label', formatDate(row.date) + ' · ' + clock(row.in) + '–' + clock(row.out) + ' · descanso (h)', group);
     const input = node('input', null, label);
-    input.type = 'number';
-    input.min = '0';
-    input.max = String(row.presence);
-    input.step = '1';
-    input.value = String(row.rest);
+    input.inputMode = 'decimal';
+    const showRest = minutes => (minutes / 60).toLocaleString('es-ES', { maximumFractionDigits: 2 });
+    input.value = showRest(row.rest);
     input.addEventListener('change', () => {
-      if (!input.value || !input.validity.valid) {
-        input.value = String(selected.records.find(record => recordKey(record) === recordKey(row)).rest);
+      const rest = decimalHours(input.value);
+      if (rest === null || rest > row.presence) {
+        input.value = showRest(selected.records.find(record => recordKey(record) === recordKey(row)).rest);
         return;
       }
-      rests.set(recordKey(row), Number(input.value));
+      rests.set(recordKey(row), rest);
+      input.value = showRest(rest);
       updatePdf(false);
     });
   }
@@ -374,7 +375,6 @@ $('year').addEventListener('change', () => {
   resetAdjustments();
   updatePdf();
 });
-$('rule').addEventListener('change', () => updatePdf());
 for (const id of ['files','name']) $(id).addEventListener('change', () => { clearPdf(); resetAdjustments(); recalculate(); });
 $('mode').addEventListener('change', () => { resetAdjustments(); recalculate(); });
 for (const id of ['start','end']) $(id).addEventListener('change', () => {
@@ -387,12 +387,12 @@ for (const id of ['start','end']) $(id).addEventListener('change', () => {
   recalculate();
 });
 $('entryMode').addEventListener('change', () => { clearEntries(); resetAdjustments(); recalculate(); });
-$('manualKind').addEventListener('change', () => { syncEntries(); recalculate(); });
 $('addEntry').addEventListener('click', addEntry);
 $('entries').addEventListener('input', recalculate);
-for (const id of ['contract','hasComplementary','hasIrregular','complementary','included','irregular']) {
+$('contract').addEventListener('input', () => value('mode') === 'pdf' ? updatePdf() : recalculate());
+for (const id of ['hasComplementary','hasIrregular','complementary','included','irregular']) {
   $(id).addEventListener('input', () => {
-    if (id !== 'contract') adjustmentPeriod = value('mode') === 'pdf'
+    adjustmentPeriod = value('mode') === 'pdf'
       ? selected && selected.start + '/' + selected.end + '/pdf' : value('start') + '/' + value('end') + '/manual';
     recalculate();
   });
@@ -403,7 +403,7 @@ $('reset').addEventListener('click', () => {
   $('files').value = $('name').value = '';
   $('contract').value = '0'; $('mode').value = 'manual';
   $('start').value = '2026-01-01'; $('end').value = '2026-12-31';
-  $('year').value = '2026'; $('rule').value = '0'; $('entryMode').value = 'total'; $('manualKind').value = 'net';
+  $('year').value = '2026'; $('entryMode').value = 'total';
   manualPeriod = value('start') + '/' + value('end');
   clearEntries();
   recalculate();

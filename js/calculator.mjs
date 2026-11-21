@@ -24,6 +24,14 @@ export function duration(value) {
   const match = /^(\d{1,5}):([0-5]\d)$/.exec(value.trim());
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 }
+export function decimalHours(value) {
+  const text = value.trim();
+  return /^\d{1,5}(?:[.,]\d{1,2})?$/.test(text)
+    ? Math.round(Number(text.replace(',', '.')) * 60)
+    : null;
+}
+export const rotaRest = (weeklyHours, presence) => weeklyHours > 30 && presence > 360 ? 30 : 0;
+
 const hoursDisplay = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2, useGrouping: 'always' });
 export function format(value) {
   return value == null ? '—' : hoursDisplay.format(value / 60) + ' h';
