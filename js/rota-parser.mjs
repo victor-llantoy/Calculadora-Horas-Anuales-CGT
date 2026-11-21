@@ -1,4 +1,4 @@
-import { add, date, duration } from './calculator.mjs';
+import { add, date, duration } from './calculator.mjs?v=5379d35';
 
 export const normalize = value => value.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();

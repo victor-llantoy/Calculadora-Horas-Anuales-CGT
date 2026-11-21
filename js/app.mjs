@@ -1,6 +1,6 @@
-import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs';
-import { readRotas } from './pdf-reader.mjs';
+import { contracts, date, formatDate, add, week, duration, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=5379d35';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=5379d35';
+import { readRotas } from './pdf-reader.mjs?v=5379d35';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);
