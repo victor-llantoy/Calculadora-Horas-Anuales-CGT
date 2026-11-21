@@ -94,3 +94,12 @@ test('formato 2026 con planta, fechas compactas y cabecera con al', () => {
     'Persona Sintética', start);
   assert.equal(row.records[0].presence, 300);
 });
+
+test('ampliación temporal prorratea solo los días coincidentes con el período', () => {
+  const base = contracts.find(([label]) => label.startsWith('25 h '));
+  const contract = contracts.find(([label]) => label.startsWith('30 h '));
+  const extension = { contract, start: '2026-07-01', end: '2026-07-31' };
+  assert.equal(reference(base, '2026-01-01', '2026-12-31', extension).ordinary, Math.round((1120 * 334 + 1344 * 31) * 60 / 365));
+  assert.deepEqual(reference(base, '2026-07-01', '2026-07-31', extension), reference(contract, '2026-07-01', '2026-07-31'));
+  assert.deepEqual(reference(base, '2026-08-01', '2026-08-31', extension), reference(base, '2026-08-01', '2026-08-31'));
+});

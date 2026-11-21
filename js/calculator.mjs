@@ -36,12 +36,18 @@ const hoursDisplay = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2, 
 export function format(value) {
   return value == null ? '—' : hoursDisplay.format(value / 60) + ' h';
 }
-export function reference(contract, start, end) {
+export function reference(contract, start, end, extension) {
   const days = (date(end) - date(start)) / DAY + 1;
   if (!(days >= 1) || start.slice(0, 4) !== '2026' || end.slice(0, 4) !== '2026') return null;
   const [, annual, irregular] = contract;
-  return { days, ordinary: Math.round(annual * 60 * days / 365),
-    irregular: Math.round(irregular * 60 * days / 365) };
+  const extensionDays = extension
+    ? Math.max(0, (Math.min(date(end), date(extension.end)) - Math.max(date(start), date(extension.start))) / DAY + 1)
+    : 0;
+  const [, extendedAnnual, extendedIrregular] = extension?.contract ?? contract;
+  const baseDays = days - extensionDays;
+  return { days,
+    ordinary: Math.round((annual * baseDays + extendedAnnual * extensionDays) * 60 / 365),
+    irregular: Math.round((irregular * baseDays + extendedIrregular * extensionDays) * 60 / 365) };
 }
 export function totals(records) {
   return records.reduce((sum, row) => {

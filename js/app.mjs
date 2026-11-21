@@ -1,4 +1,4 @@
-import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=fin-de-semana-2026';
+import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=ampliacion-2026';
 import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=lector-2026';
 import { readRotas } from './pdf-reader.mjs?v=lector-2026';
 import { exportCsv, exportPdf } from './reports.mjs';
@@ -102,9 +102,25 @@ function manualInput(start, end) {
   return { records, net: true, holes, mode };
 }
 
+const weeklyHoursOf = contract => Number.parseFloat(contract[0].replace(',', '.'));
+
+function getExtension(base) {
+  if (value('hasExtension') !== 'yes') return null;
+  const index = value('extendedContract');
+  const contract = index === '' ? null : contracts[Number(index)];
+  const start = value('extensionStart'), end = value('extensionEnd');
+  if (!contract || weeklyHoursOf(contract) <= weeklyHoursOf(base) ||
+      !Number.isFinite(date(start)) || !Number.isFinite(date(end)) ||
+      start < '2026-01-01' || end > '2026-12-31' || start > end) return null;
+  return { contract, start, end };
+}
+
 function recalculate() {
   const contract = contracts[Number(value('contract'))];
   const [label, annual, irregular, yearDays, days, daily] = contract;
+  const hasExtension = value('hasExtension') === 'yes';
+  const extension = getExtension(contract);
+  $('extensionFields').hidden = !hasExtension;
   metrics('contractDetails', [['Horas anuales', format(annual * 60)], ['Distribución irregular anual', format(irregular * 60)],
     ['Distribución habitual', days + ' días × ' + format(daily * 60)], ['Días anuales de referencia', yearDays]]);
   const pdf = value('mode') === 'pdf';
@@ -125,7 +141,9 @@ function recalculate() {
   const end = pdf ? selected.end : value('end');
   if (!Number.isFinite(date(start)) || !Number.isFinite(date(end)) || start > end) return say('notice', 'Indica un período válido con el final igual o posterior al inicio.');
   const period = start + '/' + end + '/' + value('mode');
-  const expected = reference(contract, start, end);
+  if (hasExtension && !extension) return say('notice', 'Elige una jornada superior a la habitual e indica el primero y el último día de la ampliación en 2026.');
+  const expected = reference(contract, start, end, extension);
+  const annualExpected = extension ? reference(contract, '2026-01-01', '2026-12-31', extension) : null;
   let data;
   try { data = pdf ? selected : manualInput(start, end); }
   catch (error) { return say('notice', error.message); }
@@ -138,6 +156,8 @@ function recalculate() {
   const stale = (hasComplementary || hasIrregular) && adjustmentPeriod !== null && adjustmentPeriod !== period;
   const comparison = available && !stale ? compare(summary.effective, supplementary, included, expected?.ordinary) : null;
   const notices = [formatDate(start) + ' a ' + formatDate(end) + '.'];
+  if (extension) notices.push('Ampliación a ' + extension.contract[0] + ', del ' +
+    formatDate(extension.start) + ' al ' + formatDate(extension.end) + '.');
   if (!expected) notices.push('La referencia disponible solo permite comparar períodos íntegramente de 2026.');
   if (!available) notices.push('Introduce las horas del período para obtener la comparación.');
   if (stale) notices.push('Revisa y vuelve a introducir las horas complementarias e irregulares para este período.');
@@ -154,7 +174,7 @@ function recalculate() {
   say('notice', notices.join(' '));
   say('vacation', pdf ? summary.vacation + ' fechas con marca V dentro de las rotas seleccionadas.' : 'Las vacaciones se identifican al leer rotas PDF.');
   const entries = [
-    ['Referencia anual 2026', format(annual * 60)],
+    ['Referencia anual 2026', format(annualExpected?.ordinary ?? annual * 60)],
     ['Referencia proporcional', format(expected?.ordinary)],
     ['Presencia', format(available && !data.net ? summary.presence : null)],
     ['Días trabajados identificados', pdf ? data.records.length - summary.vacation : '—'],
@@ -166,7 +186,7 @@ function recalculate() {
     ['Complementarias ya incluidas', format(stale ? null : included)],
     ['Total con complementarias', format(comparison?.all)],
     ['Distribución irregular declarada', format(stale ? null : irregularUsed)],
-    ['Distribución irregular anual', format(irregular * 60)],
+    ['Distribución irregular anual', format(annualExpected?.irregular ?? irregular * 60)],
     ['Irregular proporcional orientativa', format(expected?.irregular)],
     ['Comparación irregular orientativa', format(expected && !stale && irregularUsed != null ? expected.irregular - irregularUsed : null)],
     ['Diferencia provisional (referencia − ordinarias)', format(data.holes.length || pdf && warnings.length ? null : comparison?.difference)]
@@ -231,10 +251,12 @@ function updatePdf(renderTurns = true) {
   const year = Number(value('year'));
   const { records, coverage, conflicts } = selectRecords(groups, choices);
   const withinYear = day => day.startsWith(String(year));
-  const weeklyHours = Number.parseFloat(contracts[Number(value('contract'))][0].replace(',', '.'));
+  const baseContract = contracts[Number(value('contract'))];
+  const extension = getExtension(baseContract);
   const yearRecords = records.filter(row => withinYear(row.date)).map(row => {
     if (row.kind !== 'shift') return row;
-    return { ...row, rest: rests.get(recordKey(row)) ?? rotaRest(weeklyHours, row.presence) };
+    const contract = extension && row.date >= extension.start && row.date <= extension.end ? extension.contract : baseContract;
+    return { ...row, rest: rests.get(recordKey(row)) ?? rotaRest(weeklyHoursOf(contract), row.presence) };
   });
   // Incomplete weeks can still be reviewed, but they do not count as coverage.
   const observed = [...groups.keys()].flatMap(day => Array.from({ length: 7 }, (_, i) => add(day, i))).filter(withinYear).sort();
@@ -389,7 +411,9 @@ for (const id of ['start','end']) $(id).addEventListener('change', () => {
 $('entryMode').addEventListener('change', () => { clearEntries(); resetAdjustments(); recalculate(); });
 $('addEntry').addEventListener('click', addEntry);
 $('entries').addEventListener('input', recalculate);
-$('contract').addEventListener('input', () => value('mode') === 'pdf' ? updatePdf() : recalculate());
+for (const id of ['contract','hasExtension','extendedContract','extensionStart','extensionEnd']) {
+  $(id).addEventListener('input', () => value('mode') === 'pdf' ? updatePdf() : recalculate());
+}
 for (const id of ['hasComplementary','hasIrregular','complementary','included','irregular']) {
   $(id).addEventListener('input', () => {
     adjustmentPeriod = value('mode') === 'pdf'
@@ -404,6 +428,8 @@ $('reset').addEventListener('click', () => {
   $('contract').value = '0'; $('mode').value = 'manual';
   $('start').value = '2026-01-01'; $('end').value = '2026-12-31';
   $('year').value = '2026'; $('entryMode').value = 'total';
+  $('hasExtension').value = 'no';
+  $('extendedContract').value = $('extensionStart').value = $('extensionEnd').value = '';
   manualPeriod = value('start') + '/' + value('end');
   clearEntries();
   recalculate();
@@ -446,6 +472,7 @@ $('downloadPdf').addEventListener('click', () => {
 $('print').addEventListener('click', () => window.print());
 contracts.forEach(([label, annual, irregular, yearDays, weekDays, daily], index) => {
   node('option', label, $('contract')).value = String(index);
+  node('option', label, $('extendedContract')).value = String(index);
   const row = node('tr', null, $('contractRows'));
   node('th', label.split(' · ')[0], row).scope = 'row';
   for (const cell of [yearDays, weekDays, format(daily * 60), format(annual * 60), format(irregular * 60)]) {

@@ -61,6 +61,12 @@ try {
   assert.deepEqual(await page.locator('#contractRows tr').first().locator('td').allTextContents(), ['224','5','8 h','1.765 h','88 h']);
   await page.selectOption('#contract',{ label: '25 h · 5 días/semana' });
   assert.match(await page.locator('#contractDetails').innerText(), /1\.120 h/);
+  await page.selectOption('#hasExtension', 'yes');
+  await page.selectOption('#extendedContract', { label: '30 h · 5 días/semana' });
+  await page.fill('#extensionStart', '2026-07-01');
+  await page.fill('#extensionEnd', '2026-07-31');
+  assert.match(await page.locator('#summary').innerText(), /1\.139,02 h/);
+  await page.selectOption('#hasExtension', 'no');
   await page.fill('#start','2026-07-27');
   await page.locator('#start').dispatchEvent('change');
   await page.locator('[data-field=amount]').fill('484,82');
