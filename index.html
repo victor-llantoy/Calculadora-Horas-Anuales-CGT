@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
 <link rel="stylesheet" href="css/styles.css?v=horas-y-descansos">
-<script type="module" src="js/app.mjs?v=ampliacion-2026"></script>
+<script type="module" src="js/app.mjs?v=ampliacion-manual-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -25,12 +25,21 @@
 <label for="hasExtension">¿Has tenido una ampliación de jornada?</label>
 <select id="hasExtension"><option value="no">No</option><option value="yes">Sí</option></select>
 <div id="extensionFields" hidden>
+  <label for="extensionMethod">Cómo indicar la ampliación</label>
+  <select id="extensionMethod"><option value="hours">Escribir el total de horas</option><option value="dates">Elegir jornada y fechas</option></select>
+  <div id="extensionHoursFields">
+    <label for="extensionHours">¿Cuántas horas de ampliación tienes en este período?</label>
+    <input id="extensionHours" inputmode="decimal" placeholder="Por ejemplo, 5" autocomplete="off" aria-describedby="extensionHoursNote">
+    <p class="note" id="extensionHoursNote">Escribe el total de horas acordadas de ampliación dentro del período que estás revisando. Se añaden a la referencia del período.</p>
+  </div>
+  <div id="extensionDatesFields" hidden>
   <div class="grid">
     <div><label for="extendedContract">Jornada semanal durante la ampliación</label><select id="extendedContract"><option value="">Selecciona una jornada</option></select></div>
     <div><label for="extensionStart">Primer día de la ampliación</label><input id="extensionStart" type="date" min="2026-01-01" max="2026-12-31"></div>
     <div><label for="extensionEnd">Último día de la ampliación</label><input id="extensionEnd" type="date" min="2026-01-01" max="2026-12-31"></div>
   </div>
   <p class="note">Introduce las fechas efectivas de la ampliación en 2026. Si sigue vigente al terminar el año, usa el 31/12/2026. La referencia se estima por días naturales de cada jornada.</p>
+  </div>
 </div>
 <details id="tabla-jornadas">
 <summary>Ver tabla de jornadas 2026</summary>
