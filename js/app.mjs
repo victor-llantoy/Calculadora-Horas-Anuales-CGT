@@ -24,7 +24,7 @@ function metrics(id, entries) {
 
 const clock = minutes => Math.floor(minutes / 60) + ':' + String(minutes % 60).padStart(2, '0');
 let groups = new Map(), choices = new Map(), rests = new Map();
-let selected = null, applied = false, controller = null, report = null, entryId = 0;
+let selected = null, controller = null, report = null, entryId = 0;
 let warnings = [], documentCount = 0, duplicateCount = 0;
 let adjustmentPeriod = null, manualPeriod = null;
 
@@ -143,7 +143,7 @@ function recalculate() {
   say('vacation', 'Sin información de vacaciones.');
   say('exportStatus', '');
   setExport(false);
-  if (pdf && (!applied || !selected)) return say('notice', 'Analiza y revisa tus rotas antes de usar sus horas.');
+  if (pdf && !selected) return say('notice', 'Añade tus rotas y pulsa «Calcular mis horas». Si hay versiones en conflicto, elige cuál usar.');
   const start = pdf ? selected.start : value('start');
   const end = pdf ? selected.end : value('end');
   if (!Number.isFinite(date(start)) || !Number.isFinite(date(end)) || start > end) return say('notice', 'Indica un período válido con el final igual o posterior al inicio.');
@@ -288,15 +288,14 @@ function updatePdf(renderTurns = true) {
       }
     }
   }
-  selected = start ? { start, end, records: yearRecords, net: false, holes } : null;
   const blocking = [...conflicts].some(day => withinYear(day) || withinYear(add(day,6)));
-  if (!selected || blocking) applied = false;
-  $('apply').disabled = !selected || blocking || controller !== null;
+  selected = start && !blocking && controller === null ? { start, end, records: yearRecords, net: false, holes } : null;
+  $('pdfResultLink').hidden = !selected;
   if (!groups.size) return recalculate();
   say('pdfStatus', documentCount + ' documentos analizados · ' + duplicateCount + ' duplicados omitidos · ' +
     yearRecords.filter(row => row.kind === 'shift').length + ' turnos únicos.' +
     (blocking ? ' Resuelve los conflictos antes de usar el total. Si se solapan semanas distintas, vuelve a analizar solo las rotas correctas.' : '') +
-    (!selected ? ' No hay cobertura en el año seleccionado.' : ''));
+    (!start ? ' No hay cobertura en el año seleccionado.' : ''));
   if (renderTurns) showTurns(yearRecords);
   recalculate();
 }
@@ -345,7 +344,6 @@ function showVersions() {
     select.addEventListener('change', () => {
       if (select.value === '') choices.delete(start);
       else choices.set(start, Number(select.value));
-      applied = false;
       resetAdjustments();
       updatePdf();
     });
@@ -356,10 +354,11 @@ function clearPdf() {
   controller = null;
   groups = new Map(); choices = new Map(); rests = new Map();
   warnings = []; documentCount = 0; duplicateCount = 0;
-  selected = null; applied = false;
+  selected = null;
   for (const id of ['warnings','versions','turns','pdfStatus']) $(id).replaceChildren();
   $('progress').hidden = true;
-  $('cancel').disabled = $('apply').disabled = true;
+  $('cancel').disabled = true;
+  $('pdfResultLink').hidden = true;
   $('run').disabled = false;
 }
 $('run').addEventListener('click', async () => {
@@ -404,13 +403,7 @@ $('run').addEventListener('click', async () => {
   }
 });
 $('cancel').addEventListener('click', () => controller?.abort());
-$('apply').addEventListener('click', () => {
-  applied = true;
-  recalculate();
-  $('resultados').scrollIntoView();
-});
 $('year').addEventListener('change', () => {
-  applied = false;
   resetAdjustments();
   updatePdf();
 });
@@ -442,7 +435,7 @@ $('reset').addEventListener('click', () => {
   clearPdf();
   resetAdjustments();
   $('files').value = $('name').value = '';
-  $('contract').value = '0'; $('mode').value = 'manual';
+  $('contract').value = '0'; $('mode').value = 'pdf';
   $('start').value = '2026-01-01'; $('end').value = '2026-12-31';
   $('year').value = '2026'; $('entryMode').value = 'total';
   $('hasExtension').value = 'no';
@@ -500,6 +493,5 @@ contracts.forEach(([label, annual, irregular, yearDays, weekDays, daily], index)
 });
 if (location.hash === '#tabla-jornadas') $('tabla-jornadas').open = true;
 manualPeriod = value('start') + '/' + value('end');
-if (new URLSearchParams(location.search).get('modo') === 'pdf') $('mode').value = 'pdf';
 addEntry();
 recalculate();

@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
 <link rel="stylesheet" href="css/styles.css?v=horas-y-descansos">
-<script type="module" src="js/app.mjs?v=horas-del-documento-2026"></script>
+<script type="module" src="js/app.mjs?v=rotas-primero-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -15,7 +15,7 @@
 <div class="intro-block">
 <p class="eyebrow">Jornada laboral · 2026</p>
 <h1>Calculadora de horas anuales</h1>
-<p class="intro">Compara tu jornada con la jornada de referencia de tu contrato. Introduce tus horas o lee tus rotas en este navegador.</p>
+<p class="intro">Elige tu contrato, añade los PDF y escribe tu nombre para calcular tus horas. También puedes introducir tu total manualmente.</p>
 <nav aria-label="Apartados"><a href="#contrato">Mi contrato</a><a href="#horas">Mis horas</a><a href="#ajustes">Complementarias e irregular</a><a href="#resultados">Mis resultados</a><a href="#informe">Informe</a></nav>
 </div>
 <section class="panel" id="contrato">
@@ -59,8 +59,8 @@
 <section class="panel" id="horas">
 <h2>Mis horas</h2>
 <label for="mode">Cómo quieres introducir tus horas</label>
-<select id="mode"><option value="manual">Introducir horas manualmente</option><option value="pdf">Leer mis rotas PDF</option></select>
-<div id="manual">
+<select id="mode"><option value="pdf">Leer mis rotas PDF</option><option value="manual">Introducir horas manualmente</option></select>
+<div id="manual" hidden>
 <div class="grid">
 <div><label for="start">Inicio del período</label><input type="date" id="start" value="2026-01-01"></div>
 <div><label for="end">Fin del período</label><input type="date" id="end" value="2026-12-31"></div>
@@ -69,7 +69,7 @@
 <div id="entries"></div><button id="addEntry" class="btn subtle" type="button" hidden>Añadir período</button>
 <p class="note">Introduce las horas que trabajaste, por ejemplo 37,5. Para semanas, usa el lunes. Para meses, usa el día 1.</p>
 </div>
-<div id="pdf" hidden>
+<div id="pdf">
 <p class="note">El nombre y los archivos se usan en esta pestaña. Los informes omiten el nombre y los archivos originales.</p>
 <div class="grid">
 <div><label for="files">Rotas PDF</label><input type="file" id="files" accept=".pdf,application/pdf" multiple></div>
@@ -77,13 +77,13 @@
 <div><label for="year">Año de los turnos que quieres contar</label><input id="year" type="number" min="2000" max="2099" value="2026"></div>
 </div>
 <p class="note">En contratos de más de 30 h semanales, se descuentan 0,5 h de los turnos que superan las 6 h. Un turno de 8,5 h cuenta como 8 h. Puedes ajustar el descanso de cada turno.</p>
-<div class="actions"><button id="run" class="btn" type="button">Analizar rotas</button><button id="cancel" class="btn subtle" type="button" disabled>Cancelar análisis</button></div>
+<div class="actions"><button id="run" class="btn" type="button">Calcular mis horas</button><button id="cancel" class="btn subtle" type="button" disabled>Cancelar análisis</button></div>
 <progress id="progress" hidden aria-label="Progreso de lectura"></progress>
 <p id="pdfStatus" role="status"></p>
 <ul id="warnings"></ul>
 <div id="versions"></div>
 <div id="turns"></div>
-<button id="apply" class="btn" type="button" disabled>Utilizar estas horas en mi cálculo anual</button>
+<p id="pdfResultLink" hidden><a href="#resultados">Ver mis resultados</a></p>
 </div>
 </section>
 <section class="panel" id="ajustes">

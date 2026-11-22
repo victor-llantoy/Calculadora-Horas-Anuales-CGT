@@ -59,6 +59,10 @@ try {
   await page.locator('#tabla-jornadas summary').click();
   assert.equal(await page.locator('#contractRows tr').count(), 11);
   assert.deepEqual(await page.locator('#contractRows tr').first().locator('td').allTextContents(), ['224','5','8 h','1.765 h','88 h']);
+  assert.equal(await page.locator('#mode').inputValue(), 'pdf');
+  assert.equal(await page.locator('#pdf').isVisible(), true);
+  assert.equal(await page.locator('#manual').isVisible(), false);
+  await page.selectOption('#mode','manual');
   await page.selectOption('#contract',{ label: '25 h · 5 días/semana' });
   assert.match(await page.locator('#contractDetails').innerText(), /1\.120 h/);
   await page.selectOption('#hasExtension', 'yes');
@@ -89,7 +93,7 @@ try {
   }
   const a = fixture('Week 01.pdf','2026-01-05');
   await analyze([a], '1 turnos únicos');
-  await page.click('#apply');
+  assert.equal(await page.locator('#pdfResultLink').isVisible(), true);
   assert.match(await page.locator('#notice').innerText(), /05\/01\/2026 a 11\/01\/2026.*parte del año/);
   assert.match(await page.locator('#vacation').innerText(), /1 fechas/);
   assert.match(await page.locator('#summary').innerText(), /8 h/);
@@ -123,30 +127,26 @@ try {
   assert.match(await download('#downloadPdf'), /^%PDF-1.4/);
 
   await analyze([a, { ...a, name: 'copia.pdf' }, fixture('otra.pdf','2026-01-19')], '1 duplicados omitidos');
-  await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /12\/01\/2026/);
   await analyze([a, fixture('revision.pdf','2026-01-05','16:00')], 'Resuelve los conflictos');
-  assert.equal(await page.locator('#apply').isEnabled(), false);
+  assert.equal(await page.locator('#pdfResultLink').isVisible(), false);
   await page.locator('#versions select').selectOption('1');
   await page.selectOption('#contract',{ label: '30 h · 5 días/semana' });
-  await page.click('#apply');
   assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h/);
 
   await analyze([fixture('cambio.pdf','2026-12-28','17:00',4)], '0 turnos únicos');
   await page.fill('#year','2027');
   await page.locator('#year').dispatchEvent('change');
-  await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /01\/01\/2027 a 03\/01\/2027.*solo permite/);
   assert.match(await page.locator('#summary').innerText(), /8 h/);
 
   await analyze([{ name:'ilegible.pdf', mimeType:'application/pdf', buffer: Buffer.from('No es un PDF') }], 'ninguna rota verificable');
   assert.match(await page.locator('#warnings').innerText(), /PDF ilegible/);
-  assert.equal(await page.locator('#apply').isEnabled(), false);
+  assert.equal(await page.locator('#pdfResultLink').isVisible(), false);
 
   const full = Array.from({length:53}, (_, i) => fixture('Week ' + (i%26 + 1) + '.pdf', add('2025-12-29', i*7), '17:00', i === 0 ? 3 : 0));
   await page.fill('#year','2026');
   await analyze(full, '53 turnos únicos');
-  await page.click('#apply');
   assert.match(await page.locator('#notice').innerText(), /01\/01\/2026 a 31\/12\/2026/);
   assert.doesNotMatch(await page.locator('#notice').innerText(), /sin cobertura|parte del año/);
   assert.match(await page.locator('#summary').innerText(), /424 h/);
