@@ -191,6 +191,7 @@ function recalculate() {
   say('vacation', pdf ? summary.vacation + ' fechas con marca V dentro de las rotas seleccionadas.' : 'Las vacaciones se identifican al leer rotas PDF.');
   const weekendEntries = pdf ? showWeekends(data.weekends, Number(value('year')), days, extension) : [];
   const entries = [
+    ['Trabajo efectivo registrado', format(available ? summary.effective : null)],
     ['Referencia anual 2026', format(annualExpected?.ordinary ?? (start === '2026-01-01' && end === '2026-12-31' ? expected?.ordinary : null) ?? annual * 60)],
     ...(manualExtension && extensionHours ? [['Horas de ampliación acordadas', format(extensionHours)]] : []),
     ['Referencia proporcional', format(expected?.ordinary)],
@@ -198,7 +199,6 @@ function recalculate() {
     ['Días trabajados identificados', pdf ? data.records.length - summary.vacation : '—'],
     ['Vacaciones identificadas (V)', pdf ? summary.vacation : '—'],
     ['Descansos descontados', format(available && !data.net ? summary.rest : null)],
-    ['Trabajo efectivo registrado', format(available ? summary.effective : null)],
     ...(hasExtension ? [['Horas de ampliación realizadas añadidas', format(extensionWorked)]] : []),
     ['Ordinarias registradas', format(comparison?.ordinary)],
     ['Complementarias declaradas', format(stale ? null : supplementary)],
@@ -338,6 +338,7 @@ function updatePdf(renderTurns = true) {
   recalculate();
 }
 function showTurns(records) {
+  $('turnOptions').hidden = records.length === 0;
   const container = $('turns');
   container.replaceChildren();
   let group, lastWeek;
@@ -396,6 +397,9 @@ function clearPdf() {
   for (const id of ['warnings','versions','turns','pdfStatus']) $(id).replaceChildren();
   $('progress').hidden = true;
   $('cancel').disabled = true;
+  $('cancel').hidden = true;
+  $('turnOptions').hidden = true;
+  $('turnOptions').open = false;
   $('pdfResultLink').hidden = true;
   $('run').disabled = false;
 }
@@ -411,6 +415,7 @@ $('run').addEventListener('click', async () => {
   const job = controller = new AbortController();
   $('run').disabled = true;
   $('cancel').disabled = false;
+  $('cancel').hidden = false;
   $('progress').hidden = false;
   $('progress').max = files.length;
   $('progress').value = 0;
@@ -436,6 +441,7 @@ $('run').addEventListener('click', async () => {
       $('progress').hidden = true;
       $('run').disabled = false;
       $('cancel').disabled = true;
+      $('cancel').hidden = true;
       updatePdf();
     }
   }
@@ -529,7 +535,13 @@ contracts.forEach(([label, annual, irregular, yearDays, weekDays, daily], index)
     node('td', cell, row);
   }
 });
-if (location.hash === '#tabla-jornadas') $('tabla-jornadas').open = true;
+function revealLinkedSection() {
+  if (location.hash === '#tabla-jornadas') $('tabla-jornadas').open = true;
+  if (['#tabla-jornadas', '#contrato'].includes(location.hash)) $('contrato').open = true;
+  if (location.hash === '#ajustes') $('ajustes').open = true;
+}
+window.addEventListener('hashchange', revealLinkedSection);
+revealLinkedSection();
 manualPeriod = value('start') + '/' + value('end');
 addEntry();
 recalculate();

@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#111111">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
-<link rel="stylesheet" href="css/styles.css?v=horas-y-descansos">
-<script type="module" src="js/app.mjs?v=descansos-2026"></script>
+<link rel="stylesheet" href="css/styles.css?v=movil-2026">
+<script type="module" src="js/app.mjs?v=movil-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -15,12 +15,60 @@
 <div class="intro-block">
 <p class="eyebrow">Jornada laboral · 2026</p>
 <h1>Calculadora de horas anuales</h1>
-<p class="intro">Elige tu contrato, añade los PDF y escribe tu nombre para calcular tus horas. También puedes introducir tu total manualmente.</p>
-<nav aria-label="Apartados"><a href="#contrato">Mi contrato</a><a href="#horas">Mis horas</a><a href="#ajustes">Complementarias e irregular</a><a href="#resultados">Mis resultados</a><a href="#informe">Informe</a></nav>
+<p class="intro">Añade tus rotas PDF y escribe tu nombre.</p>
 </div>
-<section class="panel" id="contrato">
-<h2>Mi contrato</h2>
-<label for="contract">Jornada semanal y días habituales</label><select id="contract"></select>
+<section class="panel" id="horas">
+<h2>Mis horas</h2>
+<div class="grid method-fields"><div><label for="contract">Tu jornada semanal</label><select id="contract"></select></div>
+<div><label for="mode">Método de cálculo</label><select id="mode"><option value="pdf">Leer mis rotas PDF</option><option value="manual">Introducir horas manualmente</option></select></div></div>
+<div id="manual" hidden>
+<div class="grid">
+<div><label for="start">Inicio del período</label><input type="date" id="start" value="2026-01-01"></div>
+<div><label for="end">Fin del período</label><input type="date" id="end" value="2026-12-31"></div>
+<div><label for="entryMode">Cómo registrar el tiempo</label><select id="entryMode"><option value="total">Total del período</option><option value="weekly">Por semanas</option><option value="monthly">Por meses</option></select></div>
+</div>
+<div id="entries"></div><button id="addEntry" class="btn subtle" type="button" hidden>Añadir período</button>
+<p class="note">Introduce las horas que trabajaste, por ejemplo 37,5. Para semanas, usa el lunes. Para meses, usa el día 1.</p>
+</div>
+<div id="pdf">
+<div class="grid">
+<div><label for="files">Rotas PDF</label><input type="file" id="files" accept=".pdf,application/pdf" multiple></div>
+<div><label for="name">Nombre completo tal como aparece en la rota</label><input id="name" autocomplete="off" spellcheck="false"></div>
+</div>
+<div class="actions"><button id="run" class="btn" type="button">Calcular mis horas</button><button id="cancel" class="btn subtle" type="button" disabled hidden>Cancelar análisis</button></div>
+<progress id="progress" hidden aria-label="Progreso de lectura"></progress>
+<p id="pdfStatus" role="status"></p>
+<ul id="warnings"></ul>
+<div id="versions"></div>
+<p id="pdfResultLink" hidden><a class="btn" href="#resultados">Ver mis resultados</a></p>
+<details class="pdf-options"><summary>Año y cálculo de los descansos</summary>
+<label for="year">Año de los turnos</label><input id="year" type="number" min="2000" max="2099" value="2026">
+<p class="note">En contratos de más de 30 h semanales, se descuentan 0,5 h en los turnos de más de 6 h. Puedes ajustar el descanso de cada turno.</p>
+</details>
+<details id="turnOptions" hidden><summary>Revisar turnos y descansos</summary><div id="turns"></div></details>
+<p class="note private-note">Los PDF se leen en tu dispositivo.</p>
+</div>
+</section>
+<section class="panel" id="resultados">
+<h2>Mis resultados</h2>
+<p id="notice" role="status"></p>
+
+<dl id="summary" class="metrics"></dl>
+<p class="result-adjustments"><a href="#contrato">Indicar una ampliación</a> <a href="#ajustes">Añadir complementarias</a></p>
+<div id="weekends" hidden>
+  <h3>Fines de semana libres</h3>
+  <p id="weekendStatus"></p>
+  <div id="weekendDates"></div>
+  <p class="note">Se cuentan sábados y domingos consecutivos sin turno. Una G en cualquiera de los dos días identifica un fin de semana marcado como garantizado. Las vacaciones se muestran aparte. Las rotas reflejan la planificación.</p>
+  <p class="note">La referencia de 12 fines de semana en 2026 se aplica a quienes trabajan todo el año con un promedio de cinco días por semana. <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-26529">Convenio de Primark, art. 20.II.2</a></p>
+</div>
+<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.120 × 158 ÷ 365 ≈ 484,82 h.</p></details>
+<h3>Vacaciones</h3>
+<p id="vacation"></p>
+<p class="note">El convenio contempla 31 días naturales de vacaciones anuales. Las marcas V de las rotas solo identifican fechas visibles y se muestran por separado. La diferencia es orientativa y no acredita horas pendientes de recuperación.</p>
+</section>
+<details class="panel advanced" id="contrato">
+<summary>Jornada de referencia y ampliaciones</summary>
 <dl class="metrics" id="contractDetails"></dl>
 <label for="hasExtension">¿Has tenido una ampliación de jornada?</label>
 <select id="hasExtension"><option value="no">No</option><option value="yes">Sí</option></select>
@@ -55,39 +103,9 @@
 <p class="note">Consulta las horas anuales en la fila que corresponda a tu jornada semanal y a tus días habituales.</p>
 </details>
 <p class="note">La referencia de jornada completa es de 39,4 h semanales, aunque a veces el contrato se denomine «de 40 horas». Las horas anuales e irregulares se toman de su columna correspondiente.</p>
-</section>
-<section class="panel" id="horas">
-<h2>Mis horas</h2>
-<label for="mode">Cómo quieres introducir tus horas</label>
-<select id="mode"><option value="pdf">Leer mis rotas PDF</option><option value="manual">Introducir horas manualmente</option></select>
-<div id="manual" hidden>
-<div class="grid">
-<div><label for="start">Inicio del período</label><input type="date" id="start" value="2026-01-01"></div>
-<div><label for="end">Fin del período</label><input type="date" id="end" value="2026-12-31"></div>
-<div><label for="entryMode">Cómo registrar el tiempo</label><select id="entryMode"><option value="total">Total del período</option><option value="weekly">Por semanas</option><option value="monthly">Por meses</option></select></div>
-</div>
-<div id="entries"></div><button id="addEntry" class="btn subtle" type="button" hidden>Añadir período</button>
-<p class="note">Introduce las horas que trabajaste, por ejemplo 37,5. Para semanas, usa el lunes. Para meses, usa el día 1.</p>
-</div>
-<div id="pdf">
-<p class="note">El nombre y los archivos se usan en esta pestaña. Los informes omiten el nombre y los archivos originales.</p>
-<div class="grid">
-<div><label for="files">Rotas PDF</label><input type="file" id="files" accept=".pdf,application/pdf" multiple></div>
-<div><label for="name">Nombre completo tal como aparece en la rota</label><input id="name" autocomplete="off" spellcheck="false"></div>
-<div><label for="year">Año de los turnos que quieres contar</label><input id="year" type="number" min="2000" max="2099" value="2026"></div>
-</div>
-<p class="note">En contratos de más de 30 h semanales, se descuentan 0,5 h de los turnos que superan las 6 h. Un turno de 8,5 h cuenta como 8 h. Puedes ajustar el descanso de cada turno.</p>
-<div class="actions"><button id="run" class="btn" type="button">Calcular mis horas</button><button id="cancel" class="btn subtle" type="button" disabled>Cancelar análisis</button></div>
-<progress id="progress" hidden aria-label="Progreso de lectura"></progress>
-<p id="pdfStatus" role="status"></p>
-<ul id="warnings"></ul>
-<div id="versions"></div>
-<div id="turns"></div>
-<p id="pdfResultLink" hidden><a href="#resultados">Ver mis resultados</a></p>
-</div>
-</section>
-<section class="panel" id="ajustes">
-<h2>Complementarias y jornada irregular</h2>
+</details>
+<details class="panel advanced" id="ajustes">
+<summary>Complementarias y jornada irregular</summary>
 <p class="note">Indica solo las horas del período seleccionado. La distribución irregular forma parte de la jornada ordinaria.</p>
 <div class="grid">
 <div><label for="hasComplementary">¿Has realizado horas complementarias?</label><select id="hasComplementary"><option value="no">No</option><option value="yes">Sí</option></select></div>
@@ -95,23 +113,7 @@
 <div><label for="hasIrregular">¿Te han aplicado distribución irregular de jornada?</label><select id="hasIrregular"><option value="no">No</option><option value="yes">Sí</option></select></div>
 <div id="irregularFields" hidden><label for="irregular">Horas de distribución irregular</label><input id="irregular" placeholder="0" inputmode="decimal" autocomplete="off"></div>
 </div>
-</section>
-<section class="panel" id="resultados">
-<h2>Mis resultados</h2>
-<p id="notice" role="status"></p>
-<details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.120 × 158 ÷ 365 ≈ 484,82 h.</p></details>
-<dl id="summary" class="metrics"></dl>
-<div id="weekends" hidden>
-  <h3>Fines de semana libres</h3>
-  <p id="weekendStatus"></p>
-  <div id="weekendDates"></div>
-  <p class="note">Se cuentan sábados y domingos consecutivos sin turno. Una G en cualquiera de los dos días identifica un fin de semana marcado como garantizado. Las vacaciones se muestran aparte. Las rotas reflejan la planificación.</p>
-  <p class="note">La referencia de 12 fines de semana en 2026 se aplica a quienes trabajan todo el año con un promedio de cinco días por semana. <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-26529">Convenio de Primark, art. 20.II.2</a></p>
-</div>
-<h3>Vacaciones</h3>
-<p id="vacation"></p>
-<p class="note">El convenio contempla 31 días naturales de vacaciones anuales. Las marcas V de las rotas solo identifican fechas visibles y se muestran por separado. La diferencia es orientativa y no acredita horas pendientes de recuperación.</p>
-</section>
+</details>
 <section class="panel" id="informe">
 <h2>Informe</h2>
 <p class="note">Descarga el resumen y el desglose disponibles para tu período.</p>

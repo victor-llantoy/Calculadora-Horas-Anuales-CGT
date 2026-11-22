@@ -4,9 +4,9 @@ Herramienta de CGT Primark Gran Vía (Madrid). La misma página incluye el regis
 
 ## Uso desde el móvil
 
-1. Abre la calculadora en Chrome o en tu navegador habitual. Selecciona la jornada semanal y la distribución de días de tu contrato.
+1. Abre la calculadora en Chrome o en tu navegador habitual. En **Mis horas**, selecciona la jornada semanal y la distribución de días de tu contrato.
 2. En **Mis horas**, el lector de rotas PDF está seleccionado por defecto. También puedes elegir **Introducir horas manualmente**. En modo manual, introduce el total o añade registros semanales o mensuales. Introduce las horas trabajadas en decimal, por ejemplo `37,5`.
-3. Para leer rotas, selecciona los PDF e introduce el nombre tal como aparece en ellos. Revisa el año, los avisos de cobertura, la versión correcta si hay conflictos y los descansos. Abre una semana para revisar sus turnos. Pulsa **Calcular mis horas** para obtener el resultado automáticamente.
+3. Para leer rotas, selecciona los PDF e introduce el nombre tal como aparece en ellos. Revisa el año, los avisos de cobertura, la versión correcta si hay conflictos y los descansos. Abre una semana para revisar sus turnos. Pulsa **Calcular mis horas** y usa **Ver mis resultados** para saltar al total.
 4. Indica cuántas horas complementarias hiciste y qué parte ya figuraba en el total anterior. Anota por separado la distribución irregular aplicada.
 5. Consulta **Mis resultados** y **Informe**. Puedes copiar el resumen, descargar el CSV o el PDF, e imprimir. Al terminar, **Borrar todos los datos** limpia el formulario, las rotas y los resultados de la pestaña.
 

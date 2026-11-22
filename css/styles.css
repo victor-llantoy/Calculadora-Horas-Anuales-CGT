@@ -57,3 +57,29 @@ input[type=file]{height:auto}
 .contract-table thead{background:#aa151a;color:#fff}
 .contract-table tbody th{text-align:left;white-space:nowrap}
 .contract-table td:nth-child(5){background:#fff0f0;font-weight:750;white-space:nowrap}
+
+.method-fields{gap:8px 14px}
+#horas .grid label{font-size:1rem}
+.pdf-options label{margin-top:12px}
+#year{max-width:12rem}
+#pdfResultLink .btn{display:inline-block;text-decoration:none}
+.private-note{margin-bottom:0}
+.advanced>summary{font-size:1.125rem}
+.result-adjustments{display:flex;flex-wrap:wrap;gap:8px 16px}
+@media(max-width:520px){
+  body{font-size:1.0625rem}
+  .wrap{width:calc(100% - 24px)}
+  .head{padding:12px 0;gap:8px}
+  .brand{font-size:.875rem}
+  .head .btn{font-size:.875rem;padding:8px 10px;min-height:44px}
+  main{padding-top:14px}
+  .intro-block{padding:4px 0}
+  h1{font-size:1.875rem}
+  .intro{margin-bottom:4px}
+  .panel{margin-top:12px;padding:15px}
+  label{font-size:1rem}
+  input,select{font-size:1.0625rem;min-height:48px}
+  #run,#pdfResultLink .btn{width:100%;min-height:50px;text-align:center}
+  .note,.metrics dt{font-size:.9375rem}
+  .metrics dd{font-size:1.375rem}
+}

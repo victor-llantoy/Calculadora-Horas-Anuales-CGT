@@ -55,10 +55,14 @@ try {
   await page.goto(origin + '/Calculadora-Horas-Anuales-CGT/');
   assert.doesNotMatch(await page.locator('body').innerText(), /cartel/i);
   assert.doesNotMatch(await page.locator('#contract').textContent(), /cartel/i);
+  assert.equal(await page.locator('#contrato').evaluate(el => el.open), false);
+  await page.locator('#contrato > summary').click();
   assert.match(await page.locator('#contractDetails').innerText(), /1\.765 h/);
   await page.locator('#tabla-jornadas summary').click();
   assert.equal(await page.locator('#contractRows tr').count(), 11);
   assert.deepEqual(await page.locator('#contractRows tr').first().locator('td').allTextContents(), ['224','5','8 h','1.765 h','88 h']);
+  await page.setViewportSize({ width: 360, height: 640 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   assert.equal(await page.locator('#mode').inputValue(), 'pdf');
   assert.equal(await page.locator('#pdf').isVisible(), true);
   assert.equal(await page.locator('#manual').isVisible(), false);
@@ -94,15 +98,19 @@ try {
   const a = fixture('Week 01.pdf','2026-01-05');
   await analyze([a], '1 turnos únicos');
   assert.equal(await page.locator('#pdfResultLink').isVisible(), true);
+  await page.locator('#pdfResultLink a').click();
+  assert.equal(new URL(page.url()).hash, '#resultados');
   assert.match(await page.locator('#notice').innerText(), /05\/01\/2026 a 11\/01\/2026.*parte del año/);
   assert.match(await page.locator('#vacation').innerText(), /1 fechas/);
   assert.match(await page.locator('#summary').innerText(), /8 h/);
   await page.selectOption('#contract',{ label: '39,4 h · 5 días/semana' });
   assert.match(await page.locator('#summary').innerText(), /7,5 h/);
+  await page.locator('#turnOptions > summary').click();
   await page.locator('#turns summary').click();
   const rest = page.locator('#turns input').first();
   await rest.fill('0');
   await rest.dispatchEvent('change');
+  await page.locator('a[href="#ajustes"]').click();
   await page.selectOption('#hasComplementary','yes');
   await page.fill('#complementary','1');
   await page.fill('#included','1');
@@ -138,6 +146,7 @@ try {
   assert.match(await page.locator('#summary').innerText(), /Trabajo efectivo registrado\s*7 h/);
 
   await analyze([fixture('cambio.pdf','2026-12-28','17:00',4)], '0 turnos únicos');
+  await page.locator('.pdf-options > summary').click();
   await page.fill('#year','2027');
   await page.locator('#year').dispatchEvent('change');
   assert.match(await page.locator('#notice').innerText(), /01\/01\/2027 a 03\/01\/2027.*solo permite/);
