@@ -1,4 +1,4 @@
-import { add, date, duration } from './calculator.mjs?v=horas-y-descansos';
+import { add, date, duration } from './calculator.mjs?v=descansos-2026';
 
 export const normalize = value => value.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -98,9 +98,11 @@ export function parsePage(items, name, start, documentLayout) {
     const pair = cells.slice(i * 2, i * 2 + 2);
     const values = pair.flat();
     const vacation = values.some(value => /^V$/i.test(value));
+    const guaranteed = values.some(value => /^G$/i.test(value));
     const malformed = values.some(value => value.includes(':') && clock(value) === null);
     const [entries, exits] = pair.map(values => [...new Set(values.map(clock).filter(value => value !== null))]);
-    if (malformed) issues.push(day);
+    if (malformed || guaranteed && (vacation || entries.length || exits.length)) issues.push(day);
+    else if (guaranteed) records.push({ date: day, kind: 'guaranteed' });
     else if (vacation && !entries.length && !exits.length) records.push({ date: day, kind: 'vacation' });
     else if (entries.length || exits.length || vacation) {
       const presence = (exits[0] - entries[0] + 1440) % 1440;

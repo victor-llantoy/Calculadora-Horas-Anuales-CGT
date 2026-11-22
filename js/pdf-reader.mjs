@@ -1,5 +1,5 @@
-import { formatDate } from './calculator.mjs?v=horas-y-descansos';
-import { parsePage, startDate, filenameStart, scheduleColumns } from './rota-parser.mjs?v=lector-2026';
+import { formatDate } from './calculator.mjs?v=descansos-2026';
+import { parsePage, startDate, filenameStart, scheduleColumns } from './rota-parser.mjs?v=descansos-2026';
 
 export async function readRotas(files, name, signal, progress) {
   const pdf = await import('../vendor/pdf.mjs');

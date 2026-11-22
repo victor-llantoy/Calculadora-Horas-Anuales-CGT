@@ -18,13 +18,13 @@ const server = createServer(async (request, response) => {
   } catch { response.writeHead(404); response.end(); }
 });
 
-function fixture(name, start, shift = '17:00', day = 0) {
+function fixture(name, start, shift = '17:00', day = 0, guaranteed = false) {
   const cell = (p, x, y) => 'BT /F1 10 Tf 1 0 0 1 ' + x + ' ' + y + ' Tm (' + p + ') Tj ET\n';
   const columns = [215,259,304,348,393,437,482,526,570,614,660,704,748,792];
   const format = date => date.split('-').reverse().join('/');
   const stream = cell(format(start) + ' al ' + format(add(start, 6)), 22, 540) +
     cell('Persona Sintetica', 20, 420) + cell('09:00', columns[day*2], 420) + cell(shift, columns[day*2+1], 420) +
-    cell('V', columns[((day+1)%7)*2], 420) + cell('EMPLEADO AJENO', 20, 390) +
+    cell('V', columns[((day+1)%7)*2], 420) + (guaranteed ? cell('G', columns[10], 420) : '') + cell('EMPLEADO AJENO', 20, 390) +
     cell('08:00', 215, 390) + cell('18:00',259,390);
   const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
@@ -125,6 +125,9 @@ try {
   }
   assert.match(await download('#csv'), /06\/01\/2026";"Vacaciones/);
   assert.match(await download('#downloadPdf'), /^%PDF-1.4/);
+
+  await analyze([fixture('garantizada.pdf','2026-01-05','17:00',0,true), fixture('libre.pdf','2026-01-12')], '2 turnos únicos');
+  assert.match(await page.locator('#weekendDates').textContent(), /Garantizados \(G\).*10\/01\/2026.*Libres sin G.*17\/01\/2026/);
 
   await analyze([a, { ...a, name: 'copia.pdf' }, fixture('otra.pdf','2026-01-19')], '1 duplicados omitidos');
   assert.match(await page.locator('#notice').innerText(), /12\/01\/2026/);

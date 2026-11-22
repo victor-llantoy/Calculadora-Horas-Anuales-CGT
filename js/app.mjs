@@ -1,6 +1,6 @@
-import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks } from './calculator.mjs?v=ampliacion-2026';
-import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=lector-2026';
-import { readRotas } from './pdf-reader.mjs?v=lector-2026';
+import { contracts, date, formatDate, add, week, decimalHours, rotaRest, format, reference, totals, compare, missingWeeks, freeWeekends } from './calculator.mjs?v=descansos-2026';
+import { groupVersions, normalize, recordKey, selectRecords } from './rota-parser.mjs?v=descansos-2026';
+import { readRotas } from './pdf-reader.mjs?v=descansos-2026';
 import { exportCsv, exportPdf } from './reports.mjs';
 
 const $ = id => document.getElementById(id);
@@ -140,6 +140,7 @@ function recalculate() {
   report = null;
   $('detail').replaceChildren();
   $('summary').replaceChildren();
+  $('weekends').hidden = true;
   say('vacation', 'Sin información de vacaciones.');
   say('exportStatus', '');
   setExport(false);
@@ -188,6 +189,7 @@ function recalculate() {
   notices.push('La comparación es provisional y no acredita horas pendientes de recuperación.');
   say('notice', notices.join(' '));
   say('vacation', pdf ? summary.vacation + ' fechas con marca V dentro de las rotas seleccionadas.' : 'Las vacaciones se identifican al leer rotas PDF.');
+  const weekendEntries = pdf ? showWeekends(data.weekends, Number(value('year')), days, extension) : [];
   const entries = [
     ['Referencia anual 2026', format(annualExpected?.ordinary ?? (start === '2026-01-01' && end === '2026-12-31' ? expected?.ordinary : null) ?? annual * 60)],
     ...(manualExtension && extensionHours ? [['Horas de ampliación acordadas', format(extensionHours)]] : []),
@@ -206,7 +208,8 @@ function recalculate() {
     ['Distribución irregular anual', format(annualExpected?.irregular ?? irregular * 60)],
     ['Irregular proporcional orientativa', format(expected?.irregular)],
     ['Comparación irregular orientativa', format(expected && !stale && irregularUsed != null ? expected.irregular - irregularUsed : null)],
-    ['Diferencia provisional (referencia − ordinarias)', format(data.holes.length || pdf && warnings.length ? null : comparison?.difference)]
+    ['Diferencia provisional (referencia − ordinarias)', format(data.holes.length || pdf && warnings.length ? null : comparison?.difference)],
+    ...weekendEntries
   ];
   metrics('summary', entries);
   renderDetail(data.records, pdf, data.net, data.mode);
@@ -218,6 +221,39 @@ function recalculate() {
 function setExport(enabled) {
   for (const id of ['copy', 'csv', 'downloadPdf', 'print']) $(id).disabled = !enabled;
 }
+function showWeekends(result, year, weeklyDays, extension) {
+  const guaranteedPast = result.guaranteed.filter(day => day.past).length;
+  const unmarkedPast = result.unmarked.filter(day => day.past).length;
+  const status = [];
+  if (year === 2026 && weeklyDays === 5 && (!extension || extension.contract[4] === 5)) {
+    const past = guaranteedPast + unmarkedPast;
+    const planned = result.guaranteed.length + result.unmarked.length;
+    status.push('Referencia: 12. Fines de semana libres ya pasados según la rota: ' + past +
+      '. Total previsto en las rotas: ' + planned + '.');
+    status.push(past >= 12 ? 'Las rotas muestran al menos 12 fines de semana libres ya pasados.' :
+      planned >= 12 ? 'La planificación incluye al menos 12, contando los próximos.' :
+      result.unavailable ? 'Con la cobertura disponible aún no se pueden comprobar los 12.' :
+      'La planificación revisada muestra menos de 12 fines de semana libres.');
+  }
+  if (result.unavailable) status.push(result.unavailable + ' fines de semana del año sin cobertura verificable.');
+  say('weekendStatus', status.join(' '));
+  const detail = $('weekendDates');
+  detail.replaceChildren();
+  const entries = [];
+  for (const [label, marked, past] of [['Garantizados (G)', result.guaranteed, guaranteedPast],
+    ['Libres sin G', result.unmarked, unmarkedPast]]) {
+    const count = past + ' pasados · ' + (marked.length - past) + ' próximos';
+    entries.push([label, count]);
+    const group = node('details', null, detail);
+    node('summary', label + ' · ' + count, group);
+    const list = node('ul', null, group);
+    for (const day of marked) node('li', formatDate(day.saturday) + ' y ' + formatDate(day.sunday) +
+      (day.past ? '' : ' · previsto'), list);
+  }
+  $('weekends').hidden = false;
+  return entries;
+}
+
 function renderDetail(records, pdf, net, mode) {
   const detail = $('detail');
   const buckets = new Map(), months = new Map();
@@ -270,7 +306,7 @@ function updatePdf(renderTurns = true) {
   const withinYear = day => day.startsWith(String(year));
   const baseContract = contracts[Number(value('contract'))];
   const extension = getExtension(baseContract);
-  const yearRecords = records.filter(row => withinYear(row.date)).map(row => {
+  const yearRecords = records.filter(row => withinYear(row.date) && row.kind !== 'guaranteed').map(row => {
     if (row.kind !== 'shift') return row;
     const contract = extension && row.date >= extension.start && row.date <= extension.end ? extension.contract : baseContract;
     return { ...row, rest: rests.get(recordKey(row)) ?? rotaRest(weeklyHoursOf(contract), row.presence) };
@@ -289,7 +325,9 @@ function updatePdf(renderTurns = true) {
     }
   }
   const blocking = [...conflicts].some(day => withinYear(day) || withinYear(add(day,6)));
-  selected = start && !blocking && controller === null ? { start, end, records: yearRecords, net: false, holes } : null;
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format();
+  selected = start && !blocking && controller === null ? { start, end, records: yearRecords, net: false, holes,
+    weekends: freeWeekends(year, records, coverage, today) } : null;
   $('pdfResultLink').hidden = !selected;
   if (!groups.size) return recalculate();
   say('pdfStatus', documentCount + ' documentos analizados · ' + duplicateCount + ' duplicados omitidos · ' +
@@ -337,7 +375,7 @@ function showVersions() {
     const select = node('select', null, label);
     node('option', 'Elegir versión', select).value = '';
     versions.forEach((version, index) => {
-      const shifts = version.records.map(row => formatDate(row.date) + ' ' + (row.kind === 'vacation' ? 'V' : clock(row.in) + '–' + clock(row.out)));
+      const shifts = version.records.map(row => formatDate(row.date) + ' ' + (row.kind === 'vacation' ? 'V' : row.kind === 'guaranteed' ? 'G' : clock(row.in) + '–' + clock(row.out)));
       node('option', 'Documento ' + version.number + ' · ' + (shifts.join(', ') || 'sin turnos') +
         (version.issues.length ? ' · con avisos' : ''), select).value = String(index);
     });

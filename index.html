@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Calculadora de Horas Anuales CGT | Primark Gran Vía</title>
 <link rel="stylesheet" href="css/styles.css?v=horas-y-descansos">
-<script type="module" src="js/app.mjs?v=rotas-primero-2026"></script>
+<script type="module" src="js/app.mjs?v=descansos-2026"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">CGT PRIMARK <small>GRAN VÍA · MADRID</small></div><button id="reset" class="btn subtle" type="button">Borrar todos los datos</button></div></header>
@@ -101,6 +101,13 @@
 <p id="notice" role="status"></p>
 <details><summary>Cómo se estima la referencia por fechas</summary><p>Se cuentan ambos días del período y se aplica una regla de tres sobre los 365 días de 2026. Ejemplo para un contrato de 25 h semanales, del 27/07/2026 al 31/12/2026: 1.120 × 158 ÷ 365 ≈ 484,82 h.</p></details>
 <dl id="summary" class="metrics"></dl>
+<div id="weekends" hidden>
+  <h3>Fines de semana libres</h3>
+  <p id="weekendStatus"></p>
+  <div id="weekendDates"></div>
+  <p class="note">Se cuentan sábados y domingos consecutivos sin turno. Una G en cualquiera de los dos días identifica un fin de semana marcado como garantizado. Las vacaciones se muestran aparte. Las rotas reflejan la planificación.</p>
+  <p class="note">La referencia de 12 fines de semana en 2026 se aplica a quienes trabajan todo el año con un promedio de cinco días por semana. <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-26529">Convenio de Primark, art. 20.II.2</a></p>
+</div>
 <h3>Vacaciones</h3>
 <p id="vacation"></p>
 <p class="note">El convenio contempla 31 días naturales de vacaciones anuales. Las marcas V de las rotas solo identifican fechas visibles y se muestran por separado. La diferencia es orientativa y no acredita horas pendientes de recuperación.</p>

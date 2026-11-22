@@ -71,3 +71,23 @@ export function missingWeeks(start, end, covered) {
   for (let day = week(start); day <= end; day = add(day, 7)) if (!covered.has(day)) missing.push(day);
   return missing;
 }
+
+export function freeWeekends(year, records, coverage, today) {
+  const byDate = new Map(records.map(row => [row.date, row]));
+  const result = { guaranteed: [], unmarked: [], unavailable: 0 };
+  const start = year + '-01-01', end = year + '-12-31';
+  for (let saturday = add(week(start), 5); saturday < end; saturday = add(saturday, 7)) {
+    if (saturday < start) continue;
+    const sunday = add(saturday, 1), friday = byDate.get(add(saturday, -1));
+    if (!coverage.has(saturday) || !coverage.has(sunday)) {
+      result.unavailable++;
+      continue;
+    }
+    const days = [byDate.get(saturday), byDate.get(sunday)];
+    if (days.some(row => row && row.kind !== 'guaranteed') ||
+        (friday?.kind === 'shift' && friday.out > 0 && friday.out < friday.in)) continue;
+    const category = days.some(row => row?.kind === 'guaranteed') ? 'guaranteed' : 'unmarked';
+    result[category].push({ saturday, sunday, past: sunday < today });
+  }
+  return result;
+}

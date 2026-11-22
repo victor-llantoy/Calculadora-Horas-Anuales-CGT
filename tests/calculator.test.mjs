@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contracts, date, duration, decimalHours, rotaRest, reference, totals, compare, missingWeeks } from '../js/calculator.mjs';
+import { contracts, date, duration, decimalHours, rotaRest, reference, totals, compare, missingWeeks, freeWeekends } from '../js/calculator.mjs';
 import { startDate, parsePage, scheduleColumns, groupVersions, selectRecords } from '../js/rota-parser.mjs';
 import { buildPdf } from '../js/reports.mjs';
 
@@ -102,4 +102,15 @@ test('ampliación temporal prorratea solo los días coincidentes con el período
   assert.equal(reference(base, '2026-01-01', '2026-12-31', extension).ordinary, Math.round((1120 * 334 + 1344 * 31) * 60 / 365));
   assert.deepEqual(reference(base, '2026-07-01', '2026-07-31', extension), reference(contract, '2026-07-01', '2026-07-31'));
   assert.deepEqual(reference(base, '2026-08-01', '2026-08-31', extension), reference(base, '2026-08-01', '2026-08-31'));
+});
+
+test('cuenta solo fines de semana completos y distingue G, vacaciones y próximos', () => {
+  const start = '2026-01-05';
+  const marked = parsePage([cell('Persona Sintética', 50), cell('G', 660), cell('G', 704)], 'Persona Sintética', start);
+  assert.deepEqual(marked.records, [{ date: '2026-01-10', kind: 'guaranteed' }]);
+  const coverage = new Set(['2026-01-10','2026-01-11','2026-01-17','2026-01-18','2026-01-24','2026-01-25','2026-01-31']);
+  const result = freeWeekends(2026, [...marked.records, { date: '2026-01-24', kind: 'vacation' }], coverage, '2026-01-15');
+  assert.deepEqual(result.guaranteed, [{ saturday: '2026-01-10', sunday: '2026-01-11', past: true }]);
+  assert.deepEqual(result.unmarked, [{ saturday: '2026-01-17', sunday: '2026-01-18', past: false }]);
+  assert.equal(result.unavailable, 49);
 });
